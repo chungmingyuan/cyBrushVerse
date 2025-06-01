@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { AIEnhancedSpacingInput, AIEnhancedSpacingOutput } from "@/ai/flows/ai-enhanced-spacing";
@@ -203,10 +204,10 @@ export function CalligraphyGenerator() {
             )}
             {!isPending && generatedImageUri && (
               <div className="w-full space-y-4">
-                <div className="border border-border rounded-md overflow-hidden shadow-inner aspect-video max-h-[400px] mx-auto bg-white flex items-center justify-center">
-                   {/* Using standard img tag for data URI as next/image might not be optimized for it or could be complex to set up for this use case.
-                       The PRD mentions "final image to fit within the preview window". This is handled by style attributes.
-                    */}
+                <div 
+                  className="border border-border rounded-md overflow-hidden shadow-inner aspect-video max-h-[400px] mx-auto flex items-center justify-center"
+                  style={{ backgroundColor: backgroundColor }}
+                >
                    <img 
                     src={generatedImageUri} 
                     alt="Generated Calligraphy" 
@@ -252,3 +253,5 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
+
+    
