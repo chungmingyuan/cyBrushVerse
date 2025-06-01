@@ -49,39 +49,51 @@ export async function aiEnhancedSpacing(input: AIEnhancedSpacingInput): Promise<
   return aiEnhancedSpacingFlow(input);
 }
 
-const spacingPrompt = ai.definePrompt({
-  name: 'spacingPrompt',
-  input: {schema: AIEnhancedSpacingInputSchema},
-  output: {schema: AIEnhancedSpacingOutputSchema},
-  prompt: `You are an AI expert in Chinese calligraphy and image composition. Your task is to generate an image of the given Chinese phrase with optimal character spacing.
-
-Given the following parameters, create an image with AI-enhanced spacing for the Chinese phrase, ensuring visual balance and aesthetic appeal. Also, provide a brief explanation of the spacing adjustments made.
-
-Chinese Phrase: {{{chinesePhrase}}}
-Font Family: {{{fontFamily}}}
-Font Size: {{{fontSize}}}
-Brush Size: {{{brushSize}}}
-Background Color: {{{backgroundColor}}}
-
-Ensure the image is returned as a data URI with the correct MIME type and Base64 encoding.
-Explain the changes that you made in the explanation field.
-
-Output:
-{
-  "spacedImageUri": "data:<mimetype>;base64,<encoded_data>",
-  "explanation": "Explanation of spacing adjustments"
-}
-`,
-});
-
 const aiEnhancedSpacingFlow = ai.defineFlow(
   {
     name: 'aiEnhancedSpacingFlow',
     inputSchema: AIEnhancedSpacingInputSchema,
     outputSchema: AIEnhancedSpacingOutputSchema,
   },
-  async input => {
-    const {output} = await spacingPrompt(input);
-    return output!;
+  async (input: AIEnhancedSpacingInput): Promise<AIEnhancedSpacingOutput> => {
+    // Step 1: Generate the image
+    const imageGenPrompt = `Generate a visually balanced Chinese calligraphy image for the phrase "${input.chinesePhrase}".
+Font style: ${input.fontFamily}.
+Character size: approximately ${input.fontSize}px.
+Brush thickness: ${input.brushSize}px.
+Background color: ${input.backgroundColor}.
+Ensure the calligraphy is clear and aesthetically pleasing, suitable for display.`;
+
+    const imageResponse = await ai.generate({
+      model: 'googleai/gemini-2.0-flash-exp', // Specific model for image generation
+      prompt: imageGenPrompt,
+      config: {
+        responseModalities: ['TEXT', 'IMAGE'], // Per documentation, both TEXT and IMAGE must be requested for gemini-2.0-flash-exp image generation
+      },
+    });
+
+    const spacedImageUri = imageResponse.media?.url;
+    if (!spacedImageUri) {
+      console.error('Image generation response:', imageResponse);
+      throw new Error('Image generation failed or did not return a valid media URL. The response from the model might not contain image data.');
+    }
+
+    // Step 2: Generate the explanation
+    const explanationPrompt = `You are an AI assistant specialized in Chinese calligraphy.
+For the Chinese phrase "${input.chinesePhrase}", with font style "${input.fontFamily}", font size ${input.fontSize}px, and brush size ${input.brushSize}px:
+Provide a brief explanation (2-3 sentences) focusing on how AI would typically adjust character spacing to achieve visual balance and aesthetic appeal.
+Consider aspects like character density, stroke complexity, and overall composition.`;
+
+    // Use the default text model (gemini-2.0-flash) for explanation
+    const explanationResponse = await ai.generate({
+      prompt: explanationPrompt,
+    });
+    
+    const explanation = explanationResponse.text ?? "AI applies sophisticated algorithms to analyze character shapes and inter-character relationships, optimizing spacing for visual harmony and readability in calligraphy. Adjustments consider stroke weight, negative space, and overall balance to create an aesthetically pleasing composition.";
+
+    return {
+      spacedImageUri,
+      explanation,
+    };
   }
 );
