@@ -21,6 +21,8 @@ const fontOptions = [
   { value: "DFKai-SB", label: "DF Kai Style (標楷體 - DFKai-SB)" },
   { value: "SimHei", label: "Black Style (黑體 - SimHei)" },
   { value: "FangSong", label: "FangSong (仿宋 - FangSong)" },
+  { value: "cwTeXKai", label: "cwTeX Kai (楷書 - cwTeXKai)"},
+  { value: "cwTeXMing", label: "cwTeX Ming (明體 - cwTeXMing)"},
 ];
 
 const samplePhrases = [
@@ -123,7 +125,7 @@ export function CalligraphyGenerator() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="phrase" className="text-lg flex items-center"><TextCursorInput className="mr-2 h-5 w-5 text-accent" />Chinese Phrase</Label>
+              <Label htmlFor="phrase" className="text-lg flex items-center"><TextCursorInput className="mr-2 h-5 w-5 text-accent" />Chinese Phrase (Traditional)</Label>
               <Textarea
                 id="phrase"
                 value={phrase}
@@ -234,7 +236,7 @@ export function CalligraphyGenerator() {
             <CardDescription>Your generated calligraphy will appear here.</CardDescription>
           </CardHeader>
           <CardContent 
-            className="min-h-[300px] flex flex-col items-center justify-center rounded-md p-4"
+            className="min-h-[300px] max-h-[75vh] overflow-y-auto flex flex-col items-center justify-center rounded-md p-4"
             style={{ backgroundColor: backgroundColor }}
           >
             {isPending && (
@@ -246,7 +248,7 @@ export function CalligraphyGenerator() {
             {!isPending && generatedImageUri && (
               <div className="w-full space-y-4">
                 <div 
-                  className="border border-border rounded-md overflow-hidden shadow-inner aspect-video max-h-[400px] mx-auto flex items-center justify-center"
+                  className="w-full border border-border rounded-md overflow-hidden shadow-inner mx-auto flex items-center justify-center"
                   style={{ backgroundColor: backgroundColor }} 
                 >
                    <img 
@@ -294,5 +296,4 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
-
     
