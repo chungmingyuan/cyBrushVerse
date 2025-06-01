@@ -195,7 +195,10 @@ export function CalligraphyGenerator() {
             <CardTitle className="font-headline text-3xl">Preview</CardTitle>
             <CardDescription>Your generated calligraphy will appear here.</CardDescription>
           </CardHeader>
-          <CardContent className="min-h-[300px] flex flex-col items-center justify-center bg-muted/30 rounded-md p-4">
+          <CardContent 
+            className="min-h-[300px] flex flex-col items-center justify-center rounded-md p-4"
+            style={{ backgroundColor: backgroundColor }}
+          >
             {isPending && (
               <div className="text-center">
                 <Loader2 className="h-16 w-16 text-primary animate-spin mb-4" />
@@ -206,7 +209,7 @@ export function CalligraphyGenerator() {
               <div className="w-full space-y-4">
                 <div 
                   className="border border-border rounded-md overflow-hidden shadow-inner aspect-video max-h-[400px] mx-auto flex items-center justify-center"
-                  style={{ backgroundColor: backgroundColor }}
+                  style={{ backgroundColor: backgroundColor }} // This ensures the image container itself also matches if needed
                 >
                    <img 
                     src={generatedImageUri} 
@@ -217,7 +220,7 @@ export function CalligraphyGenerator() {
                     />
                 </div>
                 {explanation && (
-                  <div className="bg-background p-3 rounded-md border border-border">
+                  <div className="bg-background/80 p-3 rounded-md border border-border backdrop-blur-sm">
                     <h4 className="font-semibold text-accent mb-1">AI Spacing Explanation:</h4>
                     <p className="text-sm text-foreground/80">{explanation}</p>
                   </div>
@@ -253,5 +256,3 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
-
-    
