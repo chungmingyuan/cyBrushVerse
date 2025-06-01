@@ -16,19 +16,19 @@ import NextImage from 'next/image';
 import { useState, useTransition } from "react";
 
 const fontOptions = [
-  { value: "KaiTi", label: "Regular Script (楷体 - KaiTi)" },
-  { value: "SimSun", label: "Song Style (宋体 - SimSun)" },
+  { value: "KaiTi", label: "Regular Script (楷體 - KaiTi)" },
+  { value: "MingLiU", label: "Ming Style (明體 - MingLiU)" },
+  { value: "DFKai-SB", label: "DF Kai Style (標楷體 - DFKai-SB)" },
+  { value: "SimHei", label: "Black Style (黑體 - SimHei)" },
   { value: "FangSong", label: "FangSong (仿宋 - FangSong)" },
-  { value: "LiSu", label: "Clerical Script (隶书 - LiSu)" },
-  { value: "YouYuan", label: "Round Script (幼圆 - YouYuan)" },
 ];
 
 const samplePhrases = [
-  { id: "s1", text: "花好月圆", description: "Blooming flowers and a full moon - A wish for a happy life" },
-  { id: "s2", text: "福寿康宁", description: "Good fortune, longevity, health, and peace" },
-  { id: "s3", text: "龙马精神", description: "Spirit of a dragon and horse - Vigor and vitality" },
-  { id: "s4", text: "学无止境", description: "Learning is endless" },
-  { id: "s5", text: "静以修身", description: "Cultivate oneself through tranquility" },
+  { id: "s1", text: "花好月圓", description: "Blooming flowers and a full moon - A wish for a happy life" },
+  { id: "s2", text: "福壽康寧", description: "Good fortune, longevity, health, and peace" },
+  { id: "s3", text: "龍馬精神", description: "Spirit of a dragon and horse - Vigor and vitality" },
+  { id: "s4", text: "學無止境", description: "Learning is endless" },
+  { id: "s5", text: "靜以修身", description: "Cultivate oneself through tranquility" },
 ];
 
 
@@ -128,13 +128,13 @@ export function CalligraphyGenerator() {
                 id="phrase"
                 value={phrase}
                 onChange={(e) => setPhrase(e.target.value)}
-                placeholder="例如: 花好月圆"
+                placeholder="例如: 花好月圓"
                 className="text-base min-h-[100px] focus:ring-primary"
               />
             </div>
 
             <div className="space-y-4">
-              <Label className="text-lg flex items-center"><Sparkles className="mr-2 h-5 w-5 text-accent" />Sample Phrases</Label>
+              <Label className="text-lg flex items-center"><Sparkles className="mr-2 h-5 w-5 text-accent" />Sample Phrases (Traditional)</Label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {samplePhrases.map((sample) => (
                   <Button
