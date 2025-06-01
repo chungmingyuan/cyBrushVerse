@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Loader2, Palette, PenTool, TextCursorInput, WholeWord } from "lucide-react";
+import { Download, Loader2, Palette, PenTool, Sparkles, TextCursorInput, WholeWord } from "lucide-react";
 import NextImage from 'next/image';
 import { useState, useTransition } from "react";
 
@@ -22,6 +22,15 @@ const fontOptions = [
   { value: "LiSu", label: "Clerical Script (隶书 - LiSu)" },
   { value: "YouYuan", label: "Round Script (幼圆 - YouYuan)" },
 ];
+
+const samplePhrases = [
+  { id: "s1", text: "花好月圆", description: "Blooming flowers and a full moon - A wish for a happy life" },
+  { id: "s2", text: "福寿康宁", description: "Good fortune, longevity, health, and peace" },
+  { id: "s3", text: "龙马精神", description: "Spirit of a dragon and horse - Vigor and vitality" },
+  { id: "s4", text: "学无止境", description: "Learning is endless" },
+  { id: "s5", text: "静以修身", description: "Cultivate oneself through tranquility" },
+];
+
 
 export function CalligraphyGenerator() {
   const [phrase, setPhrase] = useState<string>("你好世界");
@@ -91,6 +100,14 @@ export function CalligraphyGenerator() {
     });
   };
 
+  const handleSampleClick = (sampleText: string) => {
+    setPhrase(sampleText);
+    toast({
+      title: "Phrase Updated",
+      description: `Input set to: "${sampleText}"`,
+    });
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <header className="text-center mb-12">
@@ -115,6 +132,27 @@ export function CalligraphyGenerator() {
                 className="text-base min-h-[100px] focus:ring-primary"
               />
             </div>
+
+            <div className="space-y-4">
+              <Label className="text-lg flex items-center"><Sparkles className="mr-2 h-5 w-5 text-accent" />Sample Phrases</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {samplePhrases.map((sample) => (
+                  <Button
+                    key={sample.id}
+                    variant="outline"
+                    className="text-left justify-start h-auto py-2 border-dashed hover:border-primary hover:bg-primary/5"
+                    onClick={() => handleSampleClick(sample.text)}
+                    title={sample.description}
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-primary">{sample.text}</span>
+                      <span className="text-xs text-muted-foreground">{sample.description}</span>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            </div>
+
 
             <div className="space-y-2">
               <Label htmlFor="fontFamily" className="text-lg flex items-center"><WholeWord className="mr-2 h-5 w-5 text-accent" />Font Style</Label>
@@ -209,7 +247,7 @@ export function CalligraphyGenerator() {
               <div className="w-full space-y-4">
                 <div 
                   className="border border-border rounded-md overflow-hidden shadow-inner aspect-video max-h-[400px] mx-auto flex items-center justify-center"
-                  style={{ backgroundColor: backgroundColor }} // This ensures the image container itself also matches if needed
+                  style={{ backgroundColor: backgroundColor }} 
                 >
                    <img 
                     src={generatedImageUri} 
@@ -256,3 +294,5 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
+
+    
