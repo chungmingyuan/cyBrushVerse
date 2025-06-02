@@ -89,6 +89,23 @@ Font style: ${input.fontFamily}.
 Character size: approximately ${input.fontSize}px.
 Brush thickness: ${input.brushSize}px.`;
 
+    // Add background information first
+    if (input.backgroundImageTheme && input.backgroundImageTheme.toLowerCase() !== 'none' && input.backgroundImageTheme.toLowerCase() !== 'solid color (current)') {
+      imageGenPrompt += `
+The calligraphy should be rendered on a surface that has a background depicting: "${input.backgroundImageTheme}".
+The calligraphy characters must be clear and legible against this themed background. The visual theme ("${input.backgroundImageTheme}") must be the dominant background feature.`;
+    } else {
+      imageGenPrompt += `
+The calligraphy should be rendered on a surface with a solid background color of: ${input.backgroundColor}.`;
+    }
+
+    // Then add border information
+    imageGenPrompt += `
+After rendering the calligraphy on its background, the entire composition (calligraphy on its themed or solid background) should be framed with the following border style: ${input.borderStyle || "none"}.
+If the border style is "none", "no border", or not specified, do not add any visible border.
+Otherwise, apply the described border around the entire artwork.`;
+
+    // Now add character and stroke accuracy verification and instructions
     imageGenPrompt += `
 
 **CRITICAL VERIFICATION STEP: CHARACTER ACCURACY AND ORDER.**
@@ -101,19 +118,6 @@ This character-by-character and order accuracy is paramount and non-negotiable. 
 
 After confirming character and order accuracy, proceed to visual rendering.`;
 
-    if (input.backgroundImageTheme && input.backgroundImageTheme.toLowerCase() !== 'none' && input.backgroundImageTheme.toLowerCase() !== 'solid color (current)') {
-      imageGenPrompt += `
-The calligraphy should be rendered on a surface that has a background depicting: "${input.backgroundImageTheme}".
-The calligraphy characters must be clear and legible against this themed background. The visual theme ("${input.backgroundImageTheme}") must be the dominant background feature.`;
-    } else {
-      imageGenPrompt += `
-The calligraphy should be rendered on a surface with a solid background color of: ${input.backgroundColor}.`;
-    }
-
-    imageGenPrompt += `
-After rendering the calligraphy on its background, the entire composition (calligraphy on its themed or solid background) should be framed with the following border style: ${input.borderStyle || "none"}.
-If the border style is "none", "no border", or not specified, do not add any visible border.
-Otherwise, apply the described border around the entire artwork.`;
 
     imageGenPrompt += `
 
