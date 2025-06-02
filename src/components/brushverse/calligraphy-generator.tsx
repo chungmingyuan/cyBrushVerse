@@ -155,26 +155,6 @@ export function CalligraphyGenerator() {
                 className="text-base min-h-[80px] focus:ring-primary"
               />
             </div>
-
-            <div className="space-y-4">
-              <Label className="text-lg flex items-center"><Sparkles className="mr-2 h-5 w-5 text-accent" />Sample Phrases (Traditional)</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {samplePhrases.map((sample) => (
-                  <Button
-                    key={sample.id}
-                    variant="outline"
-                    className="text-left justify-start h-auto py-2 border-dashed hover:border-primary hover:bg-primary/5"
-                    onClick={() => handleSampleClick(sample.text)}
-                    title={sample.description}
-                  >
-                    <div className="flex flex-col w-full">
-                      <span className="font-semibold text-primary">{sample.text}</span>
-                      <span className="text-xs text-muted-foreground break-words whitespace-normal">{sample.description}</span>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
               <div className="space-y-1">
@@ -208,7 +188,7 @@ export function CalligraphyGenerator() {
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="fontSize" className="text-base">Character Size: {fontSize[0]}px</Label>
+                <Label htmlFor="fontSize" className="text-base pt-2">Character Size: {fontSize[0]}px</Label>
                 <Slider
                   id="fontSize"
                   min={24}
@@ -221,7 +201,7 @@ export function CalligraphyGenerator() {
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="brushSize" className="text-base">Brush Thickness: {brushSize[0]}px</Label>
+                <Label htmlFor="brushSize" className="text-base pt-2">Brush Thickness: {brushSize[0]}px</Label>
                 <Slider
                   id="brushSize"
                   min={1}
@@ -233,7 +213,6 @@ export function CalligraphyGenerator() {
                 />
               </div>
             </div>
-
 
             <div className="space-y-1">
               <Label htmlFor="borderStyle" className="text-base flex items-center"><Square className="mr-2 h-5 w-5 text-accent" />Border Style</Label>
@@ -249,6 +228,26 @@ export function CalligraphyGenerator() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-4">
+              <Label className="text-lg flex items-center"><Sparkles className="mr-2 h-5 w-5 text-accent" />Sample Phrases (Traditional)</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {samplePhrases.map((sample) => (
+                  <Button
+                    key={sample.id}
+                    variant="outline"
+                    className="text-left justify-start h-auto py-2 border-dashed hover:border-primary hover:bg-primary/5"
+                    onClick={() => handleSampleClick(sample.text)}
+                    title={sample.description}
+                  >
+                    <div className="flex flex-col w-full">
+                      <span className="font-semibold text-primary">{sample.text}</span>
+                      <span className="text-xs text-muted-foreground break-words whitespace-normal">{sample.description}</span>
+                    </div>
+                  </Button>
+                ))}
+              </div>
             </div>
 
           </CardContent>
@@ -275,7 +274,7 @@ export function CalligraphyGenerator() {
             <CardDescription>Your generated calligraphy will appear here.</CardDescription>
           </CardHeader>
           <CardContent 
-            className="min-h-[300px] max-h-[75vh] overflow-y-auto flex flex-col items-center justify-center rounded-md p-4 border-t border-border"
+            className="min-h-[300px] max-h-[75vh] overflow-y-auto flex flex-col items-center justify-center rounded-md p-4 border-t border-accent"
             style={{ backgroundColor: backgroundColor }}
           >
             {isPending && (
