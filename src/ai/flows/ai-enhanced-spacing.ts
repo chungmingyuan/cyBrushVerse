@@ -92,15 +92,15 @@ Brush thickness: ${input.brushSize}px.
 Background color: ${input.backgroundColor}.
 Image Border: ${input.borderStyle || "none"}. If the border style is "none", "no border", or not specified, do not add any visible border. Otherwise, apply the described border to the final image.
 
-**CRITICAL INSTRUCTION: STROKE ACCURACY IS PARAMOUNT.**
-Your **absolute top priority** is to ensure 100% fidelity in rendering every stroke of every character accurately according to the specified font style. No stroke, however small or complex, may be omitted or distorted.
-For characters with a high stroke count, you MUST meticulously verify each stroke's presence against the standard form of the character in the specified font style. If necessary, mentally decompose complex characters into their constituent radicals and simpler components, ensuring all parts and all strokes for those parts are rendered.
-If there is any conflict between rendering a character with perfect stroke accuracy and achieving a certain visual spacing or composition, **perfect stroke accuracy MUST take precedence.**
+**CRITICAL INSTRUCTION: STROKE ACCURACY IS PARAMOUNT. THIS IS THE ABSOLUTE TOP PRIORITY.**
+Your **undisputed, number one priority** is to ensure 100% fidelity in rendering every single stroke of every character accurately according to the specified font style. No stroke, however small, complex, or subtle, may be omitted, distorted, or incorrectly rendered.
+For characters with a high stroke count or complex structures, you MUST meticulously verify each stroke's presence and form against the standard form of the character in the specified font style. If necessary, mentally decompose complex characters into their constituent radicals and simpler components, ensuring all parts and all strokes for those parts are rendered with perfect accuracy.
+If there is any conflict whatsoever between rendering a character with perfect stroke accuracy and achieving a certain visual spacing, composition, or any other aesthetic quality, **perfect stroke accuracy MUST ALWAYS take precedence.**
 
-Only *after* ensuring complete and accurate stroke rendering for all characters should you then optimize inter-character spacing and overall layout for visual harmony and aesthetic appeal.
-The fundamental shape and strokes of each individual character MUST NOT be altered by spacing considerations. The focus of spacing is solely on their placement and spacing relative to each other and the canvas.
+Only *after* you have ensured complete and utterly accurate stroke rendering for all characters should you then proceed to optimize inter-character spacing and overall layout for visual harmony and aesthetic appeal.
+The fundamental shape, form, and strokes of each individual character MUST NOT be altered in any way by spacing considerations. The focus of spacing adjustments is solely on their placement and spacing relative to each other and the canvas, AFTER character integrity is perfectly secured.
 
-An image with incorrect or missing strokes is unacceptable, regardless of its spacing or overall composition. The final image must display each character distinctly and accurately, with all strokes present.`;
+An image with incorrect or missing strokes is **completely unacceptable and considered a failure**, regardless of its spacing or overall composition. The final image must display each character distinctly, correctly, and accurately, with all strokes present and correctly formed. Re-evaluate and re-verify every character before finalizing the image.`;
 
     const imageResponse = await ai.generate({
       model: 'googleai/gemini-2.0-flash-exp',
@@ -137,4 +137,3 @@ An image with incorrect or missing strokes is unacceptable, regardless of its sp
     };
   }
 );
-
