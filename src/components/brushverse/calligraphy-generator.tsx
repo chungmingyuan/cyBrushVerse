@@ -175,63 +175,67 @@ export function CalligraphyGenerator() {
                 ))}
               </div>
             </div>
-
-
-            <div className="space-y-2">
-              <Label htmlFor="fontFamily" className="text-lg flex items-center"><WholeWord className="mr-2 h-5 w-5 text-accent" />Font Style</Label>
-              <Select value={fontFamily} onValueChange={setFontFamily}>
-                <SelectTrigger id="fontFamily" className="text-base focus:ring-primary">
-                  <SelectValue placeholder="Select a font" />
-                </SelectTrigger>
-                <SelectContent>
-                  {fontOptions.map((font) => (
-                    <SelectItem key={font.value} value={font.value} className="text-base">
-                      {font.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="fontSize" className="text-lg">Character Size: {fontSize[0]}px</Label>
-              <Slider
-                id="fontSize"
-                min={24}
-                max={128}
-                step={1}
-                value={fontSize}
-                onValueChange={setFontSize}
-                className="[&>span:first-child]:h-2 [&>span:first-child>span]:bg-primary [&>span+button]:bg-background [&>span+button]:border-primary"
-              />
-            </div>
+            {/* Compact controls section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+              <div className="space-y-1">
+                <Label htmlFor="fontFamily" className="text-base flex items-center"><WholeWord className="mr-2 h-5 w-5 text-accent" />Font Style</Label>
+                <Select value={fontFamily} onValueChange={setFontFamily}>
+                  <SelectTrigger id="fontFamily" className="text-base focus:ring-primary">
+                    <SelectValue placeholder="Select a font" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fontOptions.map((font) => (
+                      <SelectItem key={font.value} value={font.value} className="text-base">
+                        {font.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-1">
+                  <Label htmlFor="backgroundColor" className="text-base flex items-center"><Palette className="mr-2 h-5 w-5 text-accent"/>Background Color</Label>
+                  <div className="flex items-center gap-2">
+                      <Input
+                          id="backgroundColor"
+                          type="color"
+                          value={backgroundColor}
+                          onChange={(e) => setBackgroundColor(e.target.value)}
+                          className="w-16 h-10 p-1 focus:ring-primary"
+                      />
+                      <span className="text-muted-foreground">{backgroundColor}</span>
+                  </div>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="brushSize" className="text-lg">Brush Thickness: {brushSize[0]}px</Label>
-              <Slider
-                id="brushSize"
-                min={1}
-                max={10}
-                step={1}
-                value={brushSize}
-                onValueChange={setBrushSize}
-                className="[&>span:first-child]:h-2 [&>span:first-child>span]:bg-primary [&>span+button]:bg-background [&>span+button]:border-primary"
-              />
-            </div>
+              <div className="space-y-1">
+                <Label htmlFor="fontSize" className="text-base">Character Size: {fontSize[0]}px</Label>
+                <Slider
+                  id="fontSize"
+                  min={24}
+                  max={128}
+                  step={1}
+                  value={fontSize}
+                  onValueChange={setFontSize}
+                  className="[&>span:first-child]:h-2 [&>span:first-child>span]:bg-primary [&>span+button]:bg-background [&>span+button]:border-primary pt-2"
+                />
+              </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="backgroundColor" className="text-lg flex items-center"><Palette className="mr-2 h-5 w-5 text-accent"/>Background Color</Label>
-                <div className="flex items-center gap-2">
-                    <Input
-                        id="backgroundColor"
-                        type="color"
-                        value={backgroundColor}
-                        onChange={(e) => setBackgroundColor(e.target.value)}
-                        className="w-16 h-10 p-1 focus:ring-primary"
-                    />
-                    <span className="text-muted-foreground">{backgroundColor}</span>
-                </div>
+              <div className="space-y-1">
+                <Label htmlFor="brushSize" className="text-base">Brush Thickness: {brushSize[0]}px</Label>
+                <Slider
+                  id="brushSize"
+                  min={1}
+                  max={10}
+                  step={1}
+                  value={brushSize}
+                  onValueChange={setBrushSize}
+                  className="[&>span:first-child]:h-2 [&>span:first-child>span]:bg-primary [&>span+button]:bg-background [&>span+button]:border-primary pt-2"
+                />
+              </div>
             </div>
+            {/* End of compact controls section */}
+
 
             <div className="space-y-2">
               <Label htmlFor="borderStyle" className="text-lg flex items-center"><Square className="mr-2 h-5 w-5 text-accent" />Border Style</Label>
@@ -287,7 +291,7 @@ export function CalligraphyGenerator() {
                 <div
                   className={cn(
                     "w-full rounded-md overflow-hidden shadow-inner mx-auto flex items-center justify-center",
-                    borderStyle === 'none' && "border border-border"
+                    borderStyle === 'none' && "border border-border" 
                   )}
                   style={{ backgroundColor: backgroundColor }}
                 >
@@ -350,5 +354,3 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
-
-    
