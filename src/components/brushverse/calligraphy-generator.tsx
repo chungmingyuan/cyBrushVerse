@@ -277,7 +277,7 @@ export function CalligraphyGenerator() {
                         variant="ghost"
                         size="sm"
                         onClick={() => setExplanationLanguage(prev => prev === 'en' ? 'zh' : 'en')}
-                        className="px-2 py-1 h-auto text-accent hover:bg-accent/10"
+                        className="px-2 py-1 h-auto text-accent bg-accent/10 hover:bg-accent/20"
                         aria-label={explanationLanguage === 'en' ? 'Switch to Chinese explanation' : 'Switch to English explanation'}
                       >
                         <Languages className="mr-1 h-4 w-4" />
@@ -320,3 +320,4 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
+
