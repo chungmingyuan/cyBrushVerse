@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Download, Image as ImageIcon, Languages, Loader2, Palette, PenTool, Sparkles, Square, TextCursorInput, WholeWord } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useState, useTransition, type KeyboardEvent } from "react";
 
 const fontOptions = [
   { value: "KaiTi", label: "Regular Script (楷體 - KaiTi)" },
@@ -84,6 +84,7 @@ export function CalligraphyGenerator() {
       });
       return;
     }
+    if (isPending) return;
 
     startTransition(async () => {
       setGeneratedImageUri(null);
@@ -116,6 +117,15 @@ export function CalligraphyGenerator() {
         });
       }
     });
+  };
+
+  const handlePhraseKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      if (!isPending) {
+        handleGenerateImage();
+      }
+    }
   };
 
   const handleDownloadImage = () => {
@@ -166,6 +176,7 @@ export function CalligraphyGenerator() {
                 id="phrase"
                 value={phrase}
                 onChange={(e) => setPhrase(e.target.value)}
+                onKeyDown={handlePhraseKeyDown}
                 placeholder="例如: 花好月圓"
                 className="text-base min-h-[80px] focus:ring-primary"
               />
@@ -324,7 +335,7 @@ export function CalligraphyGenerator() {
                 <div
                   className={cn(
                     "w-full rounded-md overflow-hidden shadow-inner mx-auto flex items-center justify-center",
-                     (borderStyle === 'none' && backgroundImageTheme === backgroundThemeOptions[0].value) && "border border-border" // Only add border if no image border AND solid bg
+                     (borderStyle === 'none' && backgroundImageTheme === backgroundThemeOptions[0].value) && "border border-border" 
                   )}
                   style={{ backgroundColor: backgroundImageTheme === backgroundThemeOptions[0].value ? backgroundColor : 'transparent' }}
                 >
@@ -387,3 +398,4 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
+
