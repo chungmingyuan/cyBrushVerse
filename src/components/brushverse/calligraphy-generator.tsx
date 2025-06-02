@@ -133,7 +133,7 @@ export function CalligraphyGenerator() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <header className="text-center mb-8 py-8 border-y border-border">
+      <header className="text-center mb-12">
         <h1 className="text-5xl font-headline font-bold text-primary">BrushVerse</h1>
         <p className="text-xl text-muted-foreground mt-2">Craft Your Chinese Calligraphy with AI</p>
       </header>
@@ -276,7 +276,7 @@ export function CalligraphyGenerator() {
           <CardContent 
              className={cn(
                 "min-h-[300px] max-h-[75vh] overflow-y-auto rounded-md p-4 border-t border-accent",
-                generatedImageUri || isPending ? "flex flex-col" : "flex flex-col items-center justify-center"
+                (generatedImageUri || isPending) ? "flex flex-col" : "flex flex-col items-center justify-center"
               )}
             style={{ backgroundColor: backgroundColor }}
           >
