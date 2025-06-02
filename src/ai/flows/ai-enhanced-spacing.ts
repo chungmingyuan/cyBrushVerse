@@ -94,6 +94,18 @@ Font style: ${input.fontFamily}.
 Character size: approximately ${input.fontSize}px.
 Brush thickness: ${input.brushSize}px.`;
 
+    imageGenPrompt += `
+
+**CRITICAL VERIFICATION STEP: CHARACTER ACCURACY AND ORDER.**
+Before any artistic rendering or spacing, you MUST verify that the calligraphy you are about to generate contains **EXACTLY** the characters from the input phrase: "${input.chinesePhrase}", in the **EXACT SAME ORDER**.
+- NO missing characters.
+- NO extra characters.
+- NO substituted characters.
+- The ORDER of characters must be IDENTICAL to the input phrase.
+This character-by-character and order accuracy is paramount and non-negotiable. If you cannot ensure this, do not generate an image.
+
+After confirming character and order accuracy, proceed to visual rendering.`;
+
     if (input.backgroundImageTheme && input.backgroundImageTheme.toLowerCase() !== 'none' && input.backgroundImageTheme.toLowerCase() !== 'solid color (current)') {
       imageGenPrompt += `
 The calligraphy should be rendered on a surface that has a background depicting: "${input.backgroundImageTheme}".
@@ -111,17 +123,20 @@ Otherwise, apply the described border around the entire artwork.`;
 
     imageGenPrompt += `
 
-**CRITICAL INSTRUCTION: STROKE ACCURACY IS THE ABSOLUTE, UNCOMPROMISING TOP PRIORITY. NO EXCEPTIONS.**
-Your **singular, undisputed, number one priority** is to ensure 100% fidelity in rendering every single stroke of every character accurately according to the specified font style. No stroke, however small, complex, or subtle, may be omitted, distorted, or incorrectly rendered. **Do NOT proceed to any spacing or visual harmony considerations until you are absolutely certain that all characters are rendered with perfect stroke accuracy.**
+**CRITICAL INSTRUCTION: CHARACTER AND STROKE INTEGRITY ARE THE ABSOLUTE, UNCOMPROMISING TOP PRIORITY. NO EXCEPTIONS.**
+Your **singular, undisputed, number one priority** is to ensure:
+1.  **Character Set and Order Fulfillment:** The generated image MUST contain *exactly* the characters from the input phrase "${input.chinesePhrase}", in the *exact* same order as provided. Any deviation (missing characters, extra characters, substituted characters, or incorrect order) means the generation is a FAILURE and unacceptable. Verify this meticulously before proceeding.
+2.  **Stroke Fidelity:** 100% fidelity in rendering every single stroke of every character accurately according to the specified font style. No stroke, however small, complex, or subtle, may be omitted, distorted, or incorrectly rendered.
+**Do NOT proceed to any spacing or visual harmony considerations until you are absolutely certain that all characters are present in the correct order and are rendered with perfect stroke accuracy.**
 
 **FOR CHARACTERS WITH HIGH STROKE COUNTS (e.g., 15 strokes or more):** You MUST exercise extreme diligence. These characters often have intricate details. Meticulously verify each stroke's presence, shape, and position against the standard form of the character in the specified font style. Double and triple-check these complex characters. If necessary, mentally decompose complex characters into their constituent radicals and simpler components, ensuring all parts and all strokes for those parts are rendered with perfect accuracy. **For these specific high-stroke-count characters, if there is the slightest doubt that visual harmony or spacing adjustments might compromise stroke integrity, you MUST sacrifice those adjustments for the sake of perfect stroke rendering. Prioritize their internal structural correctness above any external spacing considerations relative to other characters.**
 
-If there is any conflict whatsoever between rendering *any* character with perfect stroke accuracy and achieving a certain visual spacing, composition, or any other aesthetic quality, **perfect stroke accuracy MUST ALWAYS take precedence.**
+If there is any conflict whatsoever between rendering *any* character with perfect textual and stroke accuracy (as defined above) and achieving a certain visual spacing, composition, or any other aesthetic quality, **perfect textual and stroke accuracy MUST ALWAYS take precedence.**
 
-Only *after* you have ensured complete and utterly accurate stroke rendering for all characters should you then proceed to optimize inter-character spacing and overall layout for visual harmony and aesthetic appeal.
+Only *after* you have ensured complete and utterly accurate character set, order, and stroke rendering for all characters should you then proceed to optimize inter-character spacing and overall layout for visual harmony and aesthetic appeal.
 The fundamental shape, form, and strokes of each individual character MUST NOT be altered in any way by spacing considerations. The focus of spacing adjustments is solely on their placement and spacing relative to each other and the canvas, AFTER character integrity is perfectly secured.
 
-An image with incorrect or missing strokes is **completely unacceptable and considered a failure**, regardless of its spacing or overall composition. The final image must display each character distinctly, correctly, and accurately, with all strokes present and correctly formed. Re-evaluate and re-verify every character, especially complex ones, before finalizing the image.`;
+An image with incorrect or missing characters, incorrect character order, or incorrect/missing strokes is **completely unacceptable and considered a failure**, regardless of its spacing or overall composition. The final image must display each character distinctly, correctly, and accurately, with all characters matching the input phrase in content and order, and all strokes present and correctly formed. Re-evaluate and re-verify every character, especially complex ones, before finalizing the image.`;
 
     const imageResponse = await ai.generate({
       model: 'googleai/gemini-2.0-flash-exp',
