@@ -65,11 +65,11 @@ const explanationPrompt = ai.definePrompt({
   prompt: `You are an AI assistant specialized in Chinese calligraphy.
 For the Chinese phrase "{{chinesePhrase}}", with font style "{{fontFamily}}", font size {{fontSize}}px, brush thickness {{brushSize}}px on a background of "{{backgroundColor}}":
 
-1.  **English Explanation:** Provide a brief explanation (2-3 sentences) focusing on how AI would typically adjust the spacing *between* characters and their overall layout to achieve visual balance and aesthetic appeal, *without altering the characters themselves*. Consider aspects like inter-character spacing (kerning), negative space management, and overall compositional harmony. Explain how these spacing adjustments contribute to the artwork's quality.
+1.  **English Explanation:** Provide a brief explanation (2-3 sentences) focusing on how AI would typically adjust the spacing *between* characters and their overall layout to achieve visual balance and aesthetic appeal, *without altering the characters themselves*. Consider aspects like inter-character spacing (kerning), negative space management, and overall compositional harmony. Explain how these spacing adjustments contribute to the artwork's quality. Ensure the explanation clarifies that the fundamental shape and strokes of each individual character in the calligraphy itself are NEVER altered; focus only on spacing and layout adjustments.
 
 2.  **Traditional Chinese Explanation:** Provide the same explanation as above, translated accurately into Traditional Chinese.
 
-Return the explanations in the specified output format. Ensure the fundamental shape and strokes of each individual character in the calligraphy itself are NEVER altered; focus only on spacing and layout adjustments.`,
+Return the explanations in the specified output format.`,
 });
 
 
@@ -90,7 +90,9 @@ Background color: ${input.backgroundColor}.
 The primary goal is to optimize the spacing BETWEEN characters and their overall arrangement on the canvas to achieve visual balance and aesthetic appeal.
 IMPORTANT: The fundamental shape and strokes of each individual character MUST NOT be altered. The focus is solely on their placement and spacing relative to each other and the canvas.
 
-Crucially, the rendering of each character must be of the highest fidelity. Pay meticulous attention to ensure that ALL strokes for EVERY character are present and correctly rendered, precisely according to the selected font style. This is especially important for characters with a high stroke count, where missing even a single stroke significantly degrades the quality. The final image must not omit any strokes. Ensure the calligraphy is clear, with each character distinctly rendered, and the overall composition is harmonious.`;
+Crucially, the rendering of each character must be of the HIGHEST FIDELITY. Pay meticulous attention to ensure that ALL strokes for EVERY character are present and correctly rendered, precisely according to the selected font style. 
+For characters with a high stroke count, you MUST meticulously verify each stroke's presence against the standard form of the character in the specified font style. If necessary, mentally decompose complex characters into their constituent radicals and simpler components, ensuring all parts and all strokes for those parts are rendered. No stroke, however small or intricate, should be omitted. Prioritize complete fidelity of character structure over stylistic simplification if there is any conflict.
+The final image must not omit any strokes. Ensure the calligraphy is clear, with each character distinctly and accurately rendered, and the overall composition is harmonious.`;
 
     const imageResponse = await ai.generate({
       model: 'googleai/gemini-2.0-flash-exp', 
@@ -121,4 +123,3 @@ Crucially, the rendering of each character must be of the highest fidelity. Pay 
     };
   }
 );
-
