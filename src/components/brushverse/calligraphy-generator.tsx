@@ -152,7 +152,7 @@ export function CalligraphyGenerator() {
                 value={phrase}
                 onChange={(e) => setPhrase(e.target.value)}
                 placeholder="例如: 花好月圓"
-                className="text-base min-h-[100px] focus:ring-primary"
+                className="text-base min-h-[80px] focus:ring-primary"
               />
             </div>
 
@@ -352,6 +352,3 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
-
-
-      
