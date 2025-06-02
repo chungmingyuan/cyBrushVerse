@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Download, Languages, Loader2, Palette, PenTool, Sparkles, Square, TextCursorInput, WholeWord } from "lucide-react";
-import NextImage from 'next/image';
+// import NextImage from 'next/image'; // Not currently used as NextImage component
 import { useState, useTransition } from "react";
 
 const fontOptions = [
@@ -42,6 +42,10 @@ const borderOptions = [
     { value: 'simple dark gray frame (1px)', label: 'Simple Dark Gray Frame' },
     { value: 'classic red border (2px thickness)', label: 'Classic Red Border' },
     { value: 'double line border (black, thin)', label: 'Double Line Border (Black)' },
+    { value: 'ornate wooden picture frame', label: 'Ornate Wooden Picture Frame' },
+    { value: 'simple gold picture frame', label: 'Simple Gold Picture Frame' },
+    { value: 'traditional Chinese window lattice border', label: 'Chinese Window Lattice Border' },
+    { value: 'bamboo frame border', label: 'Bamboo Frame Border' },
 ];
 
 
@@ -275,13 +279,13 @@ export function CalligraphyGenerator() {
           </CardHeader>
           <CardContent 
              className={cn(
-                "min-h-[300px] max-h-[75vh] overflow-y-auto rounded-md p-4",
-                (!generatedImageUri && !isPending) ? "flex flex-col items-center justify-center" : "flex flex-col"
+                "min-h-[300px] max-h-[75vh] overflow-y-auto rounded-md p-4 flex flex-col",
+                (!generatedImageUri && !isPending) && "items-center justify-center"
               )}
             style={{ backgroundColor: backgroundColor }}
           >
             {isPending && (
-              <div className="text-center">
+              <div className="flex flex-col items-center justify-center text-center h-full">
                 <Loader2 className="h-16 w-16 text-primary animate-spin mb-4" />
                 <p className="text-lg text-muted-foreground">Generating your masterpiece...</p>
               </div>
@@ -291,7 +295,7 @@ export function CalligraphyGenerator() {
                 <div
                   className={cn(
                     "w-full rounded-md overflow-hidden shadow-inner mx-auto flex items-center justify-center",
-                    borderStyle === 'none' && "border border-border" 
+                     borderStyle === 'none' && "border border-border"
                   )}
                   style={{ backgroundColor: backgroundColor }}
                 >
@@ -326,7 +330,7 @@ export function CalligraphyGenerator() {
               </div>
             )}
             {!isPending && !generatedImageUri && (
-              <div className="text-center text-muted-foreground">
+              <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-full">
                 <Palette className="h-16 w-16 mx-auto mb-4 opacity-50" />
                 <p className="text-lg">Your artwork will be shown here.</p>
                 <p className="text-sm">Adjust settings and click "Generate Image".</p>
@@ -354,4 +358,3 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
-
