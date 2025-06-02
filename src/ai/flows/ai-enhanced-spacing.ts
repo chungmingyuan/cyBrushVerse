@@ -89,7 +89,8 @@ Background color: ${input.backgroundColor}.
 
 The primary goal is to optimize the spacing BETWEEN characters and their overall arrangement on the canvas to achieve visual balance and aesthetic appeal.
 IMPORTANT: The fundamental shape and strokes of each individual character MUST NOT be altered. The focus is solely on their placement and spacing relative to each other and the canvas.
-Ensure the calligraphy is clear, with each character distinctly rendered according to the specified font style, and the overall composition is harmonious.`;
+
+Crucially, the rendering of each character must be of the highest fidelity. Pay meticulous attention to ensure that ALL strokes for EVERY character are present and correctly rendered, precisely according to the selected font style. This is especially important for characters with a high stroke count, where missing even a single stroke significantly degrades the quality. The final image must not omit any strokes. Ensure the calligraphy is clear, with each character distinctly rendered, and the overall composition is harmonious.`;
 
     const imageResponse = await ai.generate({
       model: 'googleai/gemini-2.0-flash-exp', 
@@ -120,3 +121,4 @@ Ensure the calligraphy is clear, with each character distinctly rendered accordi
     };
   }
 );
+
