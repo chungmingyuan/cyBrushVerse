@@ -1,16 +1,11 @@
 
 'use server';
-
 /**
- * @fileOverview An AI-enhanced spacing flow for Chinese calligraphy image generation.
+ * @fileOverview A plant problem diagnosis AI agent.
  *
- * This flow uses AI to intelligently adjust character spacing and layout in the generated image,
- * ensuring optimal visual balance and composition, especially for phrases with varying character densities,
- * without altering the characters themselves. It also allows for optional border styles and background image themes.
- *
- * - aiEnhancedSpacing - A function that handles the AI-enhanced spacing process.
- * - AIEnhancedSpacingInput - The input type for the aiEnhancedSpacing function.
- * - AIEnhancedSpacingOutput - The return type for the aiEnhancedSpacing function.
+ * - diagnosePlant - A function that handles the plant diagnosis process.
+ * - DiagnosePlantInput - The input type for the diagnosePlant function.
+ * - DiagnosePlantOutput - The return type for the diagnosePlant function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -109,8 +104,7 @@ After confirming character and order accuracy, proceed to visual rendering.`;
     if (input.backgroundImageTheme && input.backgroundImageTheme.toLowerCase() !== 'none' && input.backgroundImageTheme.toLowerCase() !== 'solid color (current)') {
       imageGenPrompt += `
 The calligraphy should be rendered on a surface that has a background depicting: "${input.backgroundImageTheme}".
-The calligraphy characters must be clear and legible against this themed background.
-The specified solid background color "${input.backgroundColor}" can be used as a complementary hint for the theme's palette if appropriate, but the visual theme itself ("${input.backgroundImageTheme}") should be the dominant background feature.`;
+The calligraphy characters must be clear and legible against this themed background. The visual theme ("${input.backgroundImageTheme}") must be the dominant background feature.`;
     } else {
       imageGenPrompt += `
 The calligraphy should be rendered on a surface with a solid background color of: ${input.backgroundColor}.`;
