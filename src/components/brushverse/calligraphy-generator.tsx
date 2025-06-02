@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Loader2, Palette, PenTool, Sparkles, TextCursorInput, WholeWord } from "lucide-react";
+import { Download, Languages, Loader2, Palette, PenTool, Sparkles, TextCursorInput, WholeWord } from "lucide-react";
 import NextImage from 'next/image';
 import { useState, useTransition } from "react";
 
@@ -23,6 +23,8 @@ const fontOptions = [
   { value: "FangSong", label: "FangSong (仿宋 - FangSong)" },
   { value: "cwTeXKai", label: "cwTeX Kai (楷書 - cwTeXKai)"},
   { value: "cwTeXMing", label: "cwTeX Ming (明體 - cwTeXMing)"},
+  { value: "Noto Serif TC", label: "Noto Serif TC (思源宋體)"},
+  { value: "Noto Sans TC", label: "Noto Sans TC (思源黑體)"},
 ];
 
 const samplePhrases = [
@@ -39,10 +41,12 @@ export function CalligraphyGenerator() {
   const [fontFamily, setFontFamily] = useState<string>(fontOptions[0].value);
   const [fontSize, setFontSize] = useState<number[]>([64]);
   const [brushSize, setBrushSize] = useState<number[]>([3]);
-  const [backgroundColor, setBackgroundColor] = useState<string>("#F5F5DC"); // Pale Beige
+  const [backgroundColor, setBackgroundColor] = useState<string>("#F5F5DC"); 
 
   const [generatedImageUri, setGeneratedImageUri] = useState<string | null>(null);
-  const [explanation, setExplanation] = useState<string | null>(null);
+  const [explanationEn, setExplanationEn] = useState<string | null>(null);
+  const [explanationZh, setExplanationZh] = useState<string | null>(null);
+  const [explanationLanguage, setExplanationLanguage] = useState<'en' | 'zh'>('en');
   
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -59,7 +63,8 @@ export function CalligraphyGenerator() {
 
     startTransition(async () => {
       setGeneratedImageUri(null);
-      setExplanation(null);
+      setExplanationEn(null);
+      setExplanationZh(null);
       try {
         const input: AIEnhancedSpacingInput = {
           chinesePhrase: phrase,
@@ -70,7 +75,8 @@ export function CalligraphyGenerator() {
         };
         const result: AIEnhancedSpacingOutput = await aiEnhancedSpacing(input);
         setGeneratedImageUri(result.spacedImageUri);
-        setExplanation(result.explanation);
+        setExplanationEn(result.explanationEn);
+        setExplanationZh(result.explanationZh);
         toast({
           title: "Image Generated",
           description: "Your calligraphy image is ready.",
@@ -90,7 +96,6 @@ export function CalligraphyGenerator() {
     if (!generatedImageUri) return;
     const link = document.createElement("a");
     link.href = generatedImageUri;
-    // Extract phrase for filename, sanitize, and limit length
     const safePhrase = phrase.replace(/[^\u4e00-\u9fa5\w\s]/g, '').substring(0, 20) || "calligraphy";
     link.download = `brushverse_${safePhrase}.png`;
     document.body.appendChild(link);
@@ -259,10 +264,23 @@ export function CalligraphyGenerator() {
                     data-ai-hint="calligraphy art"
                     />
                 </div>
-                {explanation && (
+                {explanationEn && explanationZh && (
                   <div className="bg-background/80 p-3 rounded-md border border-border backdrop-blur-sm">
-                    <h4 className="font-semibold text-accent mb-1">AI Spacing Explanation:</h4>
-                    <p className="text-sm text-foreground/80">{explanation}</p>
+                    <div className="flex justify-between items-center mb-1">
+                      <h4 className="font-semibold text-accent">AI Spacing Explanation:</h4>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setExplanationLanguage(prev => prev === 'en' ? 'zh' : 'en')}
+                        className="px-2 py-1 h-auto text-accent hover:bg-accent/10"
+                      >
+                        <Languages className="mr-1 h-4 w-4" />
+                        {explanationLanguage === 'en' ? '中文' : 'English'}
+                      </Button>
+                    </div>
+                    <p className="text-sm text-foreground/80">
+                      {explanationLanguage === 'en' ? explanationEn : explanationZh}
+                    </p>
                   </div>
                 )}
               </div>
@@ -296,4 +314,3 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
-    

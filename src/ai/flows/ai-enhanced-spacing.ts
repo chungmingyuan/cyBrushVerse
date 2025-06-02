@@ -38,10 +38,15 @@ const AIEnhancedSpacingOutputSchema = z.object({
       `A data URI of the generated image with AI-enhanced character spacing and layout, including MIME type and Base64 encoding (data:<mimetype>;base64,<encoded_data>).
       The image visualizes the Chinese phrase with optimized spacing for visual balance and composition, ensuring character integrity.`
     ),
-  explanation: z
+  explanationEn: z
     .string()
     .describe(
-      'A brief explanation of how the AI adjusted spacing and layout to improve visual balance without altering characters.'
+      'A brief explanation in English of how the AI adjusted spacing and layout to improve visual balance without altering characters.'
+    ),
+  explanationZh: z
+    .string()
+    .describe(
+      'A brief explanation in Traditional Chinese of how the AI adjusted spacing and layout to improve visual balance without altering characters.'
     ),
 });
 export type AIEnhancedSpacingOutput = z.infer<typeof AIEnhancedSpacingOutputSchema>;
@@ -49,6 +54,24 @@ export type AIEnhancedSpacingOutput = z.infer<typeof AIEnhancedSpacingOutputSche
 export async function aiEnhancedSpacing(input: AIEnhancedSpacingInput): Promise<AIEnhancedSpacingOutput> {
   return aiEnhancedSpacingFlow(input);
 }
+
+const explanationPrompt = ai.definePrompt({
+  name: 'calligraphyExplanationPrompt',
+  input: {schema: AIEnhancedSpacingInputSchema},
+  output: { schema: z.object({
+      explanationEn: AIEnhancedSpacingOutputSchema.shape.explanationEn,
+      explanationZh: AIEnhancedSpacingOutputSchema.shape.explanationZh,
+  })},
+  prompt: `You are an AI assistant specialized in Chinese calligraphy.
+For the Chinese phrase "{{chinesePhrase}}", with font style "{{fontFamily}}", font size {{fontSize}}px, brush thickness {{brushSize}}px on a background of "{{backgroundColor}}":
+
+1.  **English Explanation:** Provide a brief explanation (2-3 sentences) focusing on how AI would typically adjust the spacing *between* characters and their overall layout to achieve visual balance and aesthetic appeal, *without altering the characters themselves*. Consider aspects like inter-character spacing (kerning), negative space management, and overall compositional harmony. Explain how these spacing adjustments contribute to the artwork's quality.
+
+2.  **Traditional Chinese Explanation:** Provide the same explanation as above, translated accurately into Traditional Chinese.
+
+Return the explanations in the specified output format. Ensure the fundamental shape and strokes of each individual character in the calligraphy itself are NEVER altered; focus only on spacing and layout adjustments.`,
+});
+
 
 const aiEnhancedSpacingFlow = ai.defineFlow(
   {
@@ -69,10 +92,10 @@ IMPORTANT: The fundamental shape and strokes of each individual character MUST N
 Ensure the calligraphy is clear, with each character distinctly rendered according to the specified font style, and the overall composition is harmonious.`;
 
     const imageResponse = await ai.generate({
-      model: 'googleai/gemini-2.0-flash-exp', // Specific model for image generation
+      model: 'googleai/gemini-2.0-flash-exp', 
       prompt: imageGenPrompt,
       config: {
-        responseModalities: ['TEXT', 'IMAGE'], // Per documentation, both TEXT and IMAGE must be requested for gemini-2.0-flash-exp image generation
+        responseModalities: ['TEXT', 'IMAGE'], 
       },
     });
 
@@ -82,22 +105,18 @@ Ensure the calligraphy is clear, with each character distinctly rendered accordi
       throw new Error('Image generation failed or did not return a valid media URL. The response from the model might not contain image data.');
     }
 
-    // Step 2: Generate the explanation
-    const explanationPrompt = `You are an AI assistant specialized in Chinese calligraphy.
-For the Chinese phrase "${input.chinesePhrase}", with font style "${input.fontFamily}", font size ${input.fontSize}px, and brush size ${input.brushSize}px:
-Provide a brief explanation (2-3 sentences) focusing on how AI would typically adjust the spacing *between* characters and their overall layout to achieve visual balance and aesthetic appeal, *without altering the characters themselves*.
-Consider aspects like inter-character spacing (kerning), negative space management, and overall compositional harmony. Explain how these spacing adjustments contribute to the artwork's quality.`;
+    // Step 2: Generate the explanations
+    const explanationResult = await explanationPrompt(input);
     
-    const explanationResponse = await ai.generate({
-      prompt: explanationPrompt,
-    });
-    
-    const explanation = explanationResponse.text ?? "AI applies sophisticated algorithms to analyze inter-character relationships and overall composition, optimizing spacing for visual harmony and readability in calligraphy. Adjustments focus on character placement, kerning, and negative space to create an aesthetically pleasing composition while preserving the integrity of each character.";
+    const { explanationEn, explanationZh } = explanationResult.output || {
+        explanationEn: "AI applies sophisticated algorithms to analyze inter-character relationships and overall composition, optimizing spacing for visual harmony and readability in calligraphy. Adjustments focus on character placement, kerning, and negative space to create an aesthetically pleasing composition while preserving the integrity of each character.",
+        explanationZh: "人工智能應用複雜的算法分析字符間關係及整體佈局，優化間距以達致視覺和諧及書法可讀性。調整著重於字符位置、字距及留白處理，創造美觀的構圖，同時保留每個字符的完整性。"
+    };
 
     return {
       spacedImageUri,
-      explanation,
+      explanationEn,
+      explanationZh,
     };
   }
 );
-
