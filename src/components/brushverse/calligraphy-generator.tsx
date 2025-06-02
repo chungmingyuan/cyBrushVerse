@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import { Download, Languages, Loader2, Palette, PenTool, Sparkles, Square, TextCursorInput, WholeWord } from "lucide-react";
 import NextImage from 'next/image';
 import { useState, useTransition } from "react";
@@ -81,7 +82,7 @@ export function CalligraphyGenerator() {
           fontSize: fontSize[0],
           brushSize: brushSize[0],
           backgroundColor,
-          borderStyle: borderStyle === 'none' ? undefined : borderStyle, // Pass undefined if 'none' for AI
+          borderStyle: borderStyle === 'none' ? undefined : borderStyle,
         };
         const result: AIEnhancedSpacingOutput = await aiEnhancedSpacing(input);
         setGeneratedImageUri(result.spacedImageUri);
@@ -283,13 +284,16 @@ export function CalligraphyGenerator() {
             )}
             {!isPending && generatedImageUri && (
               <div className="w-full space-y-4">
-                <div 
-                  className="w-full border border-border rounded-md overflow-hidden shadow-inner mx-auto flex items-center justify-center"
-                  style={{ backgroundColor: backgroundColor }} 
+                <div
+                  className={cn(
+                    "w-full rounded-md overflow-hidden shadow-inner mx-auto flex items-center justify-center",
+                    borderStyle === 'none' && "border border-border"
+                  )}
+                  style={{ backgroundColor: backgroundColor }}
                 >
-                   <img 
-                    src={generatedImageUri} 
-                    alt="Generated Calligraphy" 
+                   <img
+                    src={generatedImageUri}
+                    alt="Generated Calligraphy"
                     style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto' }}
                     className="rounded-md"
                     data-ai-hint="calligraphy art"
@@ -346,3 +350,5 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
+
+    
