@@ -145,8 +145,8 @@ export function CalligraphyGenerator() {
             <CardDescription>Enter your phrase and customize the appearance.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="phrase" className="text-lg flex items-center"><TextCursorInput className="mr-2 h-5 w-5 text-accent" />Chinese Phrase (Traditional)</Label>
+            <div className="space-y-1">
+              <Label htmlFor="phrase" className="text-base flex items-center"><TextCursorInput className="mr-2 h-5 w-5 text-accent" />Chinese Phrase (Traditional)</Label>
               <Textarea
                 id="phrase"
                 value={phrase}
@@ -237,8 +237,8 @@ export function CalligraphyGenerator() {
             {/* End of compact controls section */}
 
 
-            <div className="space-y-2">
-              <Label htmlFor="borderStyle" className="text-lg flex items-center"><Square className="mr-2 h-5 w-5 text-accent" />Border Style</Label>
+            <div className="space-y-1">
+              <Label htmlFor="borderStyle" className="text-base flex items-center"><Square className="mr-2 h-5 w-5 text-accent" />Border Style</Label>
               <Select value={borderStyle} onValueChange={setBorderStyle}>
                 <SelectTrigger id="borderStyle" className="text-base focus:ring-primary">
                   <SelectValue placeholder="Select a border style" />
