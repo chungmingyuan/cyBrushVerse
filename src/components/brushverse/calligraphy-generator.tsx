@@ -115,6 +115,11 @@ export function CalligraphyGenerator() {
     });
   };
 
+  const explanationTitles = {
+    en: "AI Spacing Explanation:",
+    zh: "AI 間距調整說明："
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <header className="text-center mb-12">
@@ -267,12 +272,13 @@ export function CalligraphyGenerator() {
                 {explanationEn && explanationZh && (
                   <div className="bg-background/80 p-3 rounded-md border border-border backdrop-blur-sm">
                     <div className="flex justify-between items-center mb-1">
-                      <h4 className="font-semibold text-accent">AI Spacing Explanation:</h4>
+                      <h4 className="font-semibold text-accent">{explanationTitles[explanationLanguage]}</h4>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setExplanationLanguage(prev => prev === 'en' ? 'zh' : 'en')}
                         className="px-2 py-1 h-auto text-accent hover:bg-accent/10"
+                        aria-label={explanationLanguage === 'en' ? 'Switch to Chinese explanation' : 'Switch to English explanation'}
                       >
                         <Languages className="mr-1 h-4 w-4" />
                         {explanationLanguage === 'en' ? '中文' : 'English'}
