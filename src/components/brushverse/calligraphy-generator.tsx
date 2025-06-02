@@ -275,8 +275,8 @@ export function CalligraphyGenerator() {
           </CardHeader>
           <CardContent 
              className={cn(
-                "min-h-[300px] max-h-[75vh] overflow-y-auto rounded-md p-4 border-t border-accent",
-                (generatedImageUri || isPending) ? "flex flex-col" : "flex flex-col items-center justify-center"
+                "min-h-[300px] max-h-[75vh] overflow-y-auto rounded-md p-4",
+                (!generatedImageUri && !isPending) ? "flex flex-col items-center justify-center" : "flex flex-col"
               )}
             style={{ backgroundColor: backgroundColor }}
           >
