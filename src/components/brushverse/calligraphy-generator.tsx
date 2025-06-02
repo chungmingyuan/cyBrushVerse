@@ -167,16 +167,15 @@ export function CalligraphyGenerator() {
                     onClick={() => handleSampleClick(sample.text)}
                     title={sample.description}
                   >
-                    <div className="flex flex-col">
+                    <div className="flex flex-col w-full">
                       <span className="font-semibold text-primary">{sample.text}</span>
-                      <span className="text-xs text-muted-foreground">{sample.description}</span>
+                      <span className="text-xs text-muted-foreground break-words whitespace-normal">{sample.description}</span>
                     </div>
                   </Button>
                 ))}
               </div>
             </div>
             
-            {/* Compact controls section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
               <div className="space-y-1">
                 <Label htmlFor="fontFamily" className="text-base flex items-center"><WholeWord className="mr-2 h-5 w-5 text-accent" />Font Style</Label>
@@ -234,7 +233,6 @@ export function CalligraphyGenerator() {
                 />
               </div>
             </div>
-            {/* End of compact controls section */}
 
 
             <div className="space-y-1">
@@ -354,3 +352,6 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
+
+
+      
