@@ -6,7 +6,7 @@
  *
  * This flow uses AI to intelligently adjust character spacing and layout in the generated image,
  * ensuring optimal visual balance and composition, especially for phrases with varying character densities,
- * without altering the characters themselves. It also allows for optional border styles.
+ * without altering the characters themselves. It also allows for optional border styles and background image themes.
  *
  * - aiEnhancedSpacing - A function that handles the AI-enhanced spacing process.
  * - AIEnhancedSpacingInput - The input type for the aiEnhancedSpacing function.
@@ -27,11 +27,15 @@ const AIEnhancedSpacingInputSchema = z.object({
   brushSize: z.number().describe('The brush size to simulate different brush strokes.'),
   backgroundColor: z
     .string()
-    .describe('The background color for the image (e.g., #F5F5DC).'),
+    .describe('The background color for the image (e.g., #F5F5DC). This will be used if no background image theme is selected or if the theme implies a base color.'),
   borderStyle: z
     .string()
     .optional()
     .describe('The style of the border to apply to the image. E.g., "none", "thin black line". Default is "none".'),
+  backgroundImageTheme: z
+    .string()
+    .optional()
+    .describe('An optional theme for the background image, e.g., "Subtle Chinese Water Lily Pond", "Misty Mountains with Pine Trees". If "none" or undefined, the plain backgroundColor will be used.'),
 });
 export type AIEnhancedSpacingInput = z.infer<typeof AIEnhancedSpacingInputSchema>;
 
@@ -39,7 +43,7 @@ const AIEnhancedSpacingOutputSchema = z.object({
   spacedImageUri: z
     .string()
     .describe(
-      `A data URI of the generated image with AI-enhanced character spacing, layout, and optional border, including MIME type and Base64 encoding (data:<mimetype>;base64,<encoded_data>).
+      `A data URI of the generated image with AI-enhanced character spacing, layout, optional border, and optional background theme, including MIME type and Base64 encoding (data:<mimetype>;base64,<encoded_data>).
       The image visualizes the Chinese phrase with optimized spacing for visual balance and composition, ensuring character integrity.`
     ),
   explanationEn: z
@@ -61,7 +65,7 @@ export async function aiEnhancedSpacing(input: AIEnhancedSpacingInput): Promise<
 
 const explanationPrompt = ai.definePrompt({
   name: 'calligraphyExplanationPrompt',
-  input: {schema: AIEnhancedSpacingInputSchema.omit({ borderStyle: true })}, // borderStyle not needed for explanation
+  input: {schema: AIEnhancedSpacingInputSchema.omit({ borderStyle: true, backgroundImageTheme: true })}, // Not needed for explanation
   output: { schema: z.object({
       explanationEn: AIEnhancedSpacingOutputSchema.shape.explanationEn,
       explanationZh: AIEnhancedSpacingOutputSchema.shape.explanationZh,
@@ -85,12 +89,21 @@ const aiEnhancedSpacingFlow = ai.defineFlow(
   },
   async (input: AIEnhancedSpacingInput): Promise<AIEnhancedSpacingOutput> => {
     // Step 1: Generate the image
-    const imageGenPrompt = `Generate a Chinese calligraphy image for the phrase "${input.chinesePhrase}".
+    let imageGenPrompt = `Generate a Chinese calligraphy image for the phrase "${input.chinesePhrase}".
 Font style: ${input.fontFamily}.
 Character size: approximately ${input.fontSize}px.
 Brush thickness: ${input.brushSize}px.
-Background color: ${input.backgroundColor}.
-Image Border: ${input.borderStyle || "none"}. If the border style is "none", "no border", or not specified, do not add any visible border. Otherwise, apply the described border to the final image.
+Image Border: ${input.borderStyle || "none"}. If the border style is "none", "no border", or not specified, do not add any visible border. Otherwise, apply the described border to the final image.`;
+
+    if (input.backgroundImageTheme && input.backgroundImageTheme.toLowerCase() !== 'none' && input.backgroundImageTheme.toLowerCase() !== 'solid color (current)') {
+      imageGenPrompt += `
+The calligraphy should be placed gracefully over a background depicting: "${input.backgroundImageTheme}". Ensure the background enhances the calligraphy without overpowering it, and that the calligraphy characters remain clear and legible. The specified background color "${input.backgroundColor}" can be considered as a base or complementary color if it fits the theme, otherwise the theme's natural colors should prevail.`;
+    } else {
+      imageGenPrompt += `
+Background color: ${input.backgroundColor}.`;
+    }
+
+    imageGenPrompt += `
 
 **CRITICAL INSTRUCTION: STROKE ACCURACY IS THE ABSOLUTE, UNCOMPROMISING TOP PRIORITY. NO EXCEPTIONS.**
 Your **singular, undisputed, number one priority** is to ensure 100% fidelity in rendering every single stroke of every character accurately according to the specified font style. No stroke, however small, complex, or subtle, may be omitted, distorted, or incorrectly rendered. **Do NOT proceed to any spacing or visual harmony considerations until you are absolutely certain that all characters are rendered with perfect stroke accuracy.**
@@ -126,7 +139,7 @@ An image with incorrect or missing strokes is **completely unacceptable and cons
         fontFamily: input.fontFamily,
         fontSize: input.fontSize,
         brushSize: input.brushSize,
-        backgroundColor: input.backgroundColor,
+        backgroundColor: input.backgroundColor, // Explanation context still uses base background color
     });
     
     const { explanationEn, explanationZh } = explanationResult.output || {

@@ -12,8 +12,7 @@ import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Download, Languages, Loader2, Palette, PenTool, Sparkles, Square, TextCursorInput, WholeWord } from "lucide-react";
-// import NextImage from 'next/image'; // Not currently used as NextImage component
+import { Download, Image as ImageIcon, Languages, Loader2, Palette, PenTool, Sparkles, Square, TextCursorInput, WholeWord } from "lucide-react";
 import { useState, useTransition } from "react";
 
 const fontOptions = [
@@ -48,6 +47,16 @@ const borderOptions = [
     { value: 'bamboo frame border', label: 'Bamboo Frame Border' },
 ];
 
+const backgroundThemeOptions = [
+    { value: 'Solid Color (Current)', label: 'Solid Color (Current)' },
+    { value: 'Subtle Chinese Water Lily Pond', label: 'Subtle Water Lily Pond' },
+    { value: 'Misty Mountains with Pine Trees', label: 'Misty Mountains & Pines' },
+    { value: 'Bamboo Grove in Soft Light', label: 'Bamboo Grove (Soft Light)' },
+    { value: 'Abstract Ink Wash Landscape', label: 'Abstract Ink Wash Landscape' },
+    { value: 'Old Parchment Texture', label: 'Old Parchment Texture' },
+    { value: 'Silk Texture with Faint Floral Pattern', label: 'Silk with Faint Florals' },
+];
+
 
 export function CalligraphyGenerator() {
   const [phrase, setPhrase] = useState<string>("你好世界");
@@ -56,6 +65,7 @@ export function CalligraphyGenerator() {
   const [brushSize, setBrushSize] = useState<number[]>([3]);
   const [backgroundColor, setBackgroundColor] = useState<string>("#F5F5DC");
   const [borderStyle, setBorderStyle] = useState<string>(borderOptions[0].value);
+  const [backgroundImageTheme, setBackgroundImageTheme] = useState<string>(backgroundThemeOptions[0].value);
 
   const [generatedImageUri, setGeneratedImageUri] = useState<string | null>(null);
   const [explanationEn, setExplanationEn] = useState<string | null>(null);
@@ -87,6 +97,7 @@ export function CalligraphyGenerator() {
           brushSize: brushSize[0],
           backgroundColor,
           borderStyle: borderStyle === 'none' ? undefined : borderStyle,
+          backgroundImageTheme: backgroundImageTheme === backgroundThemeOptions[0].value ? undefined : backgroundImageTheme,
         };
         const result: AIEnhancedSpacingOutput = await aiEnhancedSpacing(input);
         setGeneratedImageUri(result.spacedImageUri);
@@ -234,6 +245,23 @@ export function CalligraphyGenerator() {
               </Select>
             </div>
 
+            <div className="space-y-1">
+              <Label htmlFor="backgroundImageTheme" className="text-base flex items-center"><ImageIcon className="mr-2 h-5 w-5 text-accent" />Background Theme</Label>
+              <Select value={backgroundImageTheme} onValueChange={setBackgroundImageTheme}>
+                <SelectTrigger id="backgroundImageTheme" className="text-base focus:ring-primary">
+                  <SelectValue placeholder="Select a background theme" />
+                </SelectTrigger>
+                <SelectContent>
+                  {backgroundThemeOptions.map((theme) => (
+                    <SelectItem key={theme.value} value={theme.value} className="text-base">
+                      {theme.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+
             <div className="space-y-4">
               <Label className="text-lg flex items-center"><Sparkles className="mr-2 h-5 w-5 text-accent" />Sample Phrases (Traditional)</Label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -241,7 +269,7 @@ export function CalligraphyGenerator() {
                   <Button
                     key={sample.id}
                     variant="outline"
-                    className="text-left justify-start h-auto py-2 border-dashed hover:border-primary hover:bg-primary/5"
+                    className="text-left justify-start h-auto py-2 border-dashed hover:border-primary hover:bg-primary/5 w-full"
                     onClick={() => handleSampleClick(sample.text)}
                     title={sample.description}
                   >
@@ -280,14 +308,15 @@ export function CalligraphyGenerator() {
           <CardContent 
              className={cn(
                 "min-h-[300px] max-h-[75vh] overflow-y-auto rounded-md p-4 flex flex-col",
-                (!generatedImageUri && !isPending) && "items-center justify-center"
+                (!generatedImageUri && !isPending) && "items-center justify-center" 
               )}
-            style={{ backgroundColor: backgroundColor }}
+            style={{ backgroundColor: backgroundImageTheme === backgroundThemeOptions[0].value ? backgroundColor : 'transparent' }}
           >
             {isPending && (
               <div className="flex flex-col items-center justify-center text-center h-full">
                 <Loader2 className="h-16 w-16 text-primary animate-spin mb-4" />
                 <p className="text-lg text-muted-foreground">Generating your masterpiece...</p>
+                <p className="text-sm text-muted-foreground">Using theme: {backgroundImageTheme !== backgroundThemeOptions[0].value ? backgroundImageTheme : 'Solid Color'}</p>
               </div>
             )}
             {!isPending && generatedImageUri && (
@@ -295,9 +324,9 @@ export function CalligraphyGenerator() {
                 <div
                   className={cn(
                     "w-full rounded-md overflow-hidden shadow-inner mx-auto flex items-center justify-center",
-                     borderStyle === 'none' && "border border-border"
+                     (borderStyle === 'none' && backgroundImageTheme === backgroundThemeOptions[0].value) && "border border-border" // Only add border if no image border AND solid bg
                   )}
-                  style={{ backgroundColor: backgroundColor }}
+                  style={{ backgroundColor: backgroundImageTheme === backgroundThemeOptions[0].value ? backgroundColor : 'transparent' }}
                 >
                    <img
                     src={generatedImageUri}
