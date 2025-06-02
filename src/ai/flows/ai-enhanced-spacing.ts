@@ -6,7 +6,7 @@
  *
  * This flow uses AI to intelligently adjust character spacing and layout in the generated image,
  * ensuring optimal visual balance and composition, especially for phrases with varying character densities,
- * without altering the characters themselves.
+ * without altering the characters themselves. It also allows for optional border styles.
  *
  * - aiEnhancedSpacing - A function that handles the AI-enhanced spacing process.
  * - AIEnhancedSpacingInput - The input type for the aiEnhancedSpacing function.
@@ -28,6 +28,10 @@ const AIEnhancedSpacingInputSchema = z.object({
   backgroundColor: z
     .string()
     .describe('The background color for the image (e.g., #F5F5DC).'),
+  borderStyle: z
+    .string()
+    .optional()
+    .describe('The style of the border to apply to the image. E.g., "none", "thin black line". Default is "none".'),
 });
 export type AIEnhancedSpacingInput = z.infer<typeof AIEnhancedSpacingInputSchema>;
 
@@ -35,7 +39,7 @@ const AIEnhancedSpacingOutputSchema = z.object({
   spacedImageUri: z
     .string()
     .describe(
-      `A data URI of the generated image with AI-enhanced character spacing and layout, including MIME type and Base64 encoding (data:<mimetype>;base64,<encoded_data>).
+      `A data URI of the generated image with AI-enhanced character spacing, layout, and optional border, including MIME type and Base64 encoding (data:<mimetype>;base64,<encoded_data>).
       The image visualizes the Chinese phrase with optimized spacing for visual balance and composition, ensuring character integrity.`
     ),
   explanationEn: z
@@ -57,7 +61,7 @@ export async function aiEnhancedSpacing(input: AIEnhancedSpacingInput): Promise<
 
 const explanationPrompt = ai.definePrompt({
   name: 'calligraphyExplanationPrompt',
-  input: {schema: AIEnhancedSpacingInputSchema},
+  input: {schema: AIEnhancedSpacingInputSchema.omit({ borderStyle: true })}, // borderStyle not needed for explanation
   output: { schema: z.object({
       explanationEn: AIEnhancedSpacingOutputSchema.shape.explanationEn,
       explanationZh: AIEnhancedSpacingOutputSchema.shape.explanationZh,
@@ -86,19 +90,20 @@ Font style: ${input.fontFamily}.
 Character size: approximately ${input.fontSize}px.
 Brush thickness: ${input.brushSize}px.
 Background color: ${input.backgroundColor}.
+Image Border: ${input.borderStyle || "none"}. If the border style is "none", "no border", or not specified, do not add any visible border. Otherwise, apply the described border to the final image.
 
 The primary goal is to optimize the spacing BETWEEN characters and their overall arrangement on the canvas to achieve visual balance and aesthetic appeal.
 IMPORTANT: The fundamental shape and strokes of each individual character MUST NOT be altered. The focus is solely on their placement and spacing relative to each other and the canvas.
 
-Crucially, the rendering of each character must be of the HIGHEST FIDELITY. Pay meticulous attention to ensure that ALL strokes for EVERY character are present and correctly rendered, precisely according to the selected font style. 
+Crucially, the rendering of each character must be of the HIGHEST FIDELITY. Pay meticulous attention to ensure that ALL strokes for EVERY character are present and correctly rendered, precisely according to the selected font style.
 For characters with a high stroke count, you MUST meticulously verify each stroke's presence against the standard form of the character in the specified font style. If necessary, mentally decompose complex characters into their constituent radicals and simpler components, ensuring all parts and all strokes for those parts are rendered. No stroke, however small or intricate, should be omitted. Prioritize complete fidelity of character structure over stylistic simplification if there is any conflict.
 The final image must not omit any strokes. Ensure the calligraphy is clear, with each character distinctly and accurately rendered, and the overall composition is harmonious.`;
 
     const imageResponse = await ai.generate({
-      model: 'googleai/gemini-2.0-flash-exp', 
+      model: 'googleai/gemini-2.0-flash-exp',
       prompt: imageGenPrompt,
       config: {
-        responseModalities: ['TEXT', 'IMAGE'], 
+        responseModalities: ['TEXT', 'IMAGE'],
       },
     });
 
@@ -109,7 +114,13 @@ The final image must not omit any strokes. Ensure the calligraphy is clear, with
     }
 
     // Step 2: Generate the explanations
-    const explanationResult = await explanationPrompt(input);
+    const explanationResult = await explanationPrompt({
+        chinesePhrase: input.chinesePhrase,
+        fontFamily: input.fontFamily,
+        fontSize: input.fontSize,
+        brushSize: input.brushSize,
+        backgroundColor: input.backgroundColor,
+    });
     
     const { explanationEn, explanationZh } = explanationResult.output || {
         explanationEn: "AI applies sophisticated algorithms to analyze inter-character relationships and overall composition, optimizing spacing for visual harmony and readability in calligraphy. Adjustments focus on character placement, kerning, and negative space to create an aesthetically pleasing composition while preserving the integrity of each character.",

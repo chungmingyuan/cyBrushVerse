@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Languages, Loader2, Palette, PenTool, Sparkles, TextCursorInput, WholeWord } from "lucide-react";
+import { Download, Languages, Loader2, Palette, PenTool, Sparkles, Square, TextCursorInput, WholeWord } from "lucide-react";
 import NextImage from 'next/image';
 import { useState, useTransition } from "react";
 
@@ -35,13 +35,22 @@ const samplePhrases = [
   { id: "s5", text: "靜以修身", description: "Cultivate oneself through tranquility" },
 ];
 
+const borderOptions = [
+    { value: 'none', label: 'No Border' },
+    { value: 'thin black line', label: 'Thin Black Line' },
+    { value: 'simple dark gray frame (1px)', label: 'Simple Dark Gray Frame' },
+    { value: 'classic red border (2px thickness)', label: 'Classic Red Border' },
+    { value: 'double line border (black, thin)', label: 'Double Line Border (Black)' },
+];
+
 
 export function CalligraphyGenerator() {
   const [phrase, setPhrase] = useState<string>("你好世界");
   const [fontFamily, setFontFamily] = useState<string>(fontOptions[0].value);
   const [fontSize, setFontSize] = useState<number[]>([64]);
   const [brushSize, setBrushSize] = useState<number[]>([3]);
-  const [backgroundColor, setBackgroundColor] = useState<string>("#F5F5DC"); 
+  const [backgroundColor, setBackgroundColor] = useState<string>("#F5F5DC");
+  const [borderStyle, setBorderStyle] = useState<string>(borderOptions[0].value);
 
   const [generatedImageUri, setGeneratedImageUri] = useState<string | null>(null);
   const [explanationEn, setExplanationEn] = useState<string | null>(null);
@@ -72,6 +81,7 @@ export function CalligraphyGenerator() {
           fontSize: fontSize[0],
           brushSize: brushSize[0],
           backgroundColor,
+          borderStyle: borderStyle === 'none' ? undefined : borderStyle, // Pass undefined if 'none' for AI
         };
         const result: AIEnhancedSpacingOutput = await aiEnhancedSpacing(input);
         setGeneratedImageUri(result.spacedImageUri);
@@ -222,6 +232,22 @@ export function CalligraphyGenerator() {
                 </div>
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="borderStyle" className="text-lg flex items-center"><Square className="mr-2 h-5 w-5 text-accent" />Border Style</Label>
+              <Select value={borderStyle} onValueChange={setBorderStyle}>
+                <SelectTrigger id="borderStyle" className="text-base focus:ring-primary">
+                  <SelectValue placeholder="Select a border style" />
+                </SelectTrigger>
+                <SelectContent>
+                  {borderOptions.map((border) => (
+                    <SelectItem key={border.value} value={border.value} className="text-base">
+                      {border.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
           </CardContent>
           <CardFooter>
             <Button
@@ -320,4 +346,3 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
-
