@@ -89,19 +89,25 @@ const aiEnhancedSpacingFlow = ai.defineFlow(
   },
   async (input: AIEnhancedSpacingInput): Promise<AIEnhancedSpacingOutput> => {
     // Step 1: Generate the image
-    let imageGenPrompt = `Generate a Chinese calligraphy image for the phrase "${input.chinesePhrase}".
+    let imageGenPrompt = `Generate a Chinese calligraphy image of the phrase "${input.chinesePhrase}".
 Font style: ${input.fontFamily}.
 Character size: approximately ${input.fontSize}px.
-Brush thickness: ${input.brushSize}px.
-Image Border: ${input.borderStyle || "none"}. If the border style is "none", "no border", or not specified, do not add any visible border. Otherwise, apply the described border to the final image.`;
+Brush thickness: ${input.brushSize}px.`;
 
     if (input.backgroundImageTheme && input.backgroundImageTheme.toLowerCase() !== 'none' && input.backgroundImageTheme.toLowerCase() !== 'solid color (current)') {
       imageGenPrompt += `
-The calligraphy should be placed gracefully over a background depicting: "${input.backgroundImageTheme}". Ensure the background enhances the calligraphy without overpowering it, and that the calligraphy characters remain clear and legible. The specified background color "${input.backgroundColor}" can be considered as a base or complementary color if it fits the theme, otherwise the theme's natural colors should prevail.`;
+The calligraphy should be rendered on a surface that has a background depicting: "${input.backgroundImageTheme}".
+The calligraphy characters must be clear and legible against this themed background.
+The specified solid background color "${input.backgroundColor}" can be used as a complementary hint for the theme's palette if appropriate, but the visual theme itself ("${input.backgroundImageTheme}") should be the dominant background feature.`;
     } else {
       imageGenPrompt += `
-Background color: ${input.backgroundColor}.`;
+The calligraphy should be rendered on a surface with a solid background color of: ${input.backgroundColor}.`;
     }
+
+    imageGenPrompt += `
+After rendering the calligraphy on its background, the entire composition (calligraphy on its themed or solid background) should be framed with the following border style: ${input.borderStyle || "none"}.
+If the border style is "none", "no border", or not specified, do not add any visible border.
+Otherwise, apply the described border around the entire artwork.`;
 
     imageGenPrompt += `
 
