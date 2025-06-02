@@ -274,7 +274,10 @@ export function CalligraphyGenerator() {
             <CardDescription>Your generated calligraphy will appear here.</CardDescription>
           </CardHeader>
           <CardContent 
-            className="min-h-[300px] max-h-[75vh] overflow-y-auto flex flex-col items-center justify-center rounded-md p-4 border-t border-accent"
+             className={cn(
+                "min-h-[300px] max-h-[75vh] overflow-y-auto rounded-md p-4 border-t border-accent",
+                generatedImageUri || isPending ? "flex flex-col" : "flex flex-col items-center justify-center"
+              )}
             style={{ backgroundColor: backgroundColor }}
           >
             {isPending && (
