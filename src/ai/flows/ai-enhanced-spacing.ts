@@ -1,11 +1,11 @@
 
 'use server';
 /**
- * @fileOverview A plant problem diagnosis AI agent.
+ * @fileOverview AI flow for generating Chinese calligraphy with enhanced spacing.
  *
- * - diagnosePlant - A function that handles the plant diagnosis process.
- * - DiagnosePlantInput - The input type for the diagnosePlant function.
- * - DiagnosePlantOutput - The return type for the diagnosePlant function.
+ * - aiEnhancedSpacing - A function that handles the calligraphy generation process.
+ * - AIEnhancedSpacingInput - The input type for the aiEnhancedSpacing function.
+ * - AIEnhancedSpacingOutput - The return type for the aiEnhancedSpacing function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -60,22 +60,22 @@ export async function aiEnhancedSpacing(input: AIEnhancedSpacingInput): Promise<
   return aiEnhancedSpacingFlow(input);
 }
 
-// const explanationPrompt = ai.definePrompt({
-//   name: 'calligraphyExplanationPrompt',
-//   input: {schema: AIEnhancedSpacingInputSchema.omit({ borderStyle: true, backgroundImageTheme: true })}, // Not needed for explanation
-//   output: { schema: z.object({
-//       explanationEn: AIEnhancedSpacingOutputSchema.shape.explanationEn,
-//       explanationZh: AIEnhancedSpacingOutputSchema.shape.explanationZh,
-//   })},
-//   prompt: `You are an AI assistant specialized in Chinese calligraphy.
-// For the Chinese phrase "{{chinesePhrase}}", with font style "{{fontFamily}}", font size {{fontSize}}px, brush thickness {{brushSize}}px on a background of "{{backgroundColor}}":
+const explanationPrompt = ai.definePrompt({
+  name: 'calligraphyExplanationPrompt',
+  input: {schema: AIEnhancedSpacingInputSchema.omit({ borderStyle: true, backgroundImageTheme: true })},
+  output: { schema: z.object({
+      explanationEn: AIEnhancedSpacingOutputSchema.shape.explanationEn,
+      explanationZh: AIEnhancedSpacingOutputSchema.shape.explanationZh,
+  })},
+  prompt: `You are an AI assistant specialized in Chinese calligraphy.
+For the Chinese phrase "{{chinesePhrase}}", with font style "{{fontFamily}}", font size {{fontSize}}px, brush thickness {{brushSize}}px on a background of "{{backgroundColor}}":
 
-// 1.  **English Explanation:** Provide a brief explanation (2-3 sentences) focusing on how AI would typically adjust the spacing *between* characters and their overall layout to achieve visual balance and aesthetic appeal, *without altering the characters themselves*. Consider aspects like inter-character spacing (kerning), negative space management, and overall compositional harmony. Explain how these spacing adjustments contribute to the artwork's quality. Ensure the explanation clarifies that the fundamental shape and strokes of each individual character in the calligraphy itself are NEVER altered; focus only on spacing and layout adjustments.
+1.  **English Explanation:** Provide a brief explanation (2-3 sentences) focusing on how AI would typically adjust the spacing *between* characters and their overall layout to achieve visual balance and aesthetic appeal, *without altering the characters themselves*. Consider aspects like inter-character spacing (kerning), negative space management, and overall compositional harmony. Explain how these spacing adjustments contribute to the artwork's quality. Ensure the explanation clarifies that the fundamental shape and strokes of each individual character in the calligraphy itself are NEVER altered; focus only on spacing and layout adjustments.
 
-// 2.  **Traditional Chinese Explanation:** Provide the same explanation as above, translated accurately into Traditional Chinese.
+2.  **Traditional Chinese Explanation:** Provide the same explanation as above, translated accurately into Traditional Chinese.
 
-// Return the explanations in the specified output format.`,
-// });
+Return the explanations in the specified output format.`,
+});
 
 
 const aiEnhancedSpacingFlow = ai.defineFlow(
@@ -85,7 +85,6 @@ const aiEnhancedSpacingFlow = ai.defineFlow(
     outputSchema: AIEnhancedSpacingOutputSchema,
   },
   async (input: AIEnhancedSpacingInput): Promise<AIEnhancedSpacingOutput> => {
-    // Step 1: Generate the image
     let imageGenPrompt = `Generate a Chinese calligraphy image of the phrase "${input.chinesePhrase}".
 Font style: ${input.fontFamily}.
 Character size: approximately ${input.fontSize}px.
@@ -117,7 +116,6 @@ This character-by-character and order accuracy is paramount and non-negotiable. 
 
 After confirming character and order accuracy, proceed to visual rendering.`;
 
-
     imageGenPrompt += `
 
 **CRITICAL INSTRUCTION: CHARACTER AND STROKE INTEGRITY ARE THE ABSOLUTE, UNCOMPROMISING TOP PRIORITY. NO EXCEPTIONS.**
@@ -130,7 +128,8 @@ Your **singular, undisputed, number one priority** is to ensure:
 
 If there is any conflict whatsoever between rendering *any* character with perfect textual and stroke accuracy (as defined above) and achieving a certain visual composition or any other aesthetic quality, **perfect textual and stroke accuracy MUST ALWAYS take precedence.**
 
-**Regarding Spacing:** For this generation, focus solely on rendering the characters accurately with the specified font, brush, and layout settings. **Do NOT attempt to adjust or optimize inter-character spacing beyond what the natural letter-spacing of the chosen font provides. Prioritize direct and accurate rendering of the characters as they would appear with standard font metrics. The fundamental shape, form, and strokes of each individual character MUST NOT be altered in any way.**
+Only *after* you have ensured complete and utterly accurate stroke rendering for all characters should you then proceed to optimize inter-character spacing and overall layout for visual harmony and aesthetic appeal.
+The fundamental shape, form, and strokes of each individual character MUST NOT be altered in any way by spacing considerations. The focus of spacing adjustments is solely on their placement and spacing relative to each other and the canvas, AFTER character integrity is perfectly secured.
 
 An image with incorrect or missing characters, incorrect character order, or incorrect/missing strokes is **completely unacceptable and considered a failure**, regardless of its spacing or overall composition. The final image must display each character distinctly, correctly, and accurately, with all characters matching the input phrase in content and order, and all strokes present and correctly formed. Re-evaluate and re-verify every character, especially complex ones, before finalizing the image.`;
 
@@ -148,24 +147,23 @@ An image with incorrect or missing characters, incorrect character order, or inc
       throw new Error('Image generation failed or did not return a valid media URL. The response from the model might not contain image data.');
     }
     
-    // Step 2: Generate the explanations (DISABLED FOR THIS TEST)
-    // const explanationResult = await explanationPrompt({
-    //     chinesePhrase: input.chinesePhrase,
-    //     fontFamily: input.fontFamily,
-    //     fontSize: input.fontSize,
-    //     brushSize: input.brushSize,
-    //     backgroundColor: input.backgroundColor, 
-    // });
+    const explanationResult = await explanationPrompt({
+        chinesePhrase: input.chinesePhrase,
+        fontFamily: input.fontFamily,
+        fontSize: input.fontSize,
+        brushSize: input.brushSize,
+        backgroundColor: input.backgroundColor, 
+    });
     
-    // const { explanationEn, explanationZh } = explanationResult.output || {
-    //     explanationEn: "AI applies sophisticated algorithms to analyze inter-character relationships and overall composition, optimizing spacing for visual harmony and readability in calligraphy. Adjustments focus on character placement, kerning, and negative space to create an aesthetically pleasing composition while preserving the integrity of each character.",
-    //     explanationZh: "人工智能應用複雜的算法分析字符間關係及整體佈局，優化間距以達致視覺和諧及書法可讀性。調整著重於字符位置、字距及留白處理，創造美觀的構圖，同時保留每個字符的完整性。"
-    // };
+    const { explanationEn, explanationZh } = explanationResult.output || {
+        explanationEn: "AI applies sophisticated algorithms to analyze inter-character relationships and overall composition, optimizing spacing for visual harmony and readability in calligraphy. Adjustments focus on character placement, kerning, and negative space to create an aesthetically pleasing composition while preserving the integrity of each character.",
+        explanationZh: "人工智能應用複雜的算法分析字符間關係及整體佈局，優化間距以達致視覺和諧及書法可讀性。調整著重於字符位置、字距及留白處理，創造美觀的構圖，同時保留每個字符的完整性。"
+    };
 
     return {
       spacedImageUri,
-      explanationEn: "", // Disabled for this test
-      explanationZh: "", // Disabled for this test
+      explanationEn,
+      explanationZh,
     };
   }
 );
