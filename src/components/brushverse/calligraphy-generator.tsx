@@ -12,8 +12,10 @@ import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Download, Image as ImageIcon, Languages, List, Loader2, Palette, PenTool, RefreshCcw, Sparkles, Square, TextCursorInput, WholeWord } from "lucide-react";
-import { useState, useTransition, type KeyboardEvent, useEffect, useCallback } from "react";
+import { Crop, Download, Image as ImageIcon, Languages, List, Loader2, Palette, PenTool, RefreshCcw, Sparkles, Square, TextCursorInput, WholeWord } from "lucide-react";
+import { useState, useTransition, type KeyboardEvent, useEffect, useCallback, useRef } from "react";
+import ReactCrop, { type Crop as CropType, type PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
 const fontOptions = [
   { value: "KaiTi", label: "Regular Script (楷體 - KaiTi)" },
@@ -120,6 +122,46 @@ const shuffleArray = (array: SamplePhrase[]) => {
   return newArray;
 };
 
+// Helper function to create a data URL for the cropped image
+async function getCroppedImg(
+  imageSrc: string,
+  pixelCrop: PixelCrop
+): Promise<string | null> {
+  const image = new Image();
+  image.crossOrigin = 'anonymous'; // Handle CORS if image is from another domain
+  image.src = imageSrc;
+  await new Promise((resolve, reject) => {
+    image.onload = resolve;
+    image.onerror = reject;
+  });
+
+  const canvas = document.createElement('canvas');
+  canvas.width = pixelCrop.width;
+  canvas.height = pixelCrop.height;
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    return null;
+  }
+
+  ctx.drawImage(
+    image,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
+    0,
+    0,
+    pixelCrop.width,
+    pixelCrop.height
+  );
+
+  return new Promise((resolve) => {
+    resolve(canvas.toDataURL('image/png'));
+  });
+}
+
+
 export function CalligraphyGenerator() {
   const [phrase, setPhrase] = useState<string>("你好世界");
   const [fontFamily, setFontFamily] = useState<string>(fontOptions[0].value);
@@ -141,6 +183,19 @@ export function CalligraphyGenerator() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [crop, setCrop] = useState<CropType>();
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+  const [showCropper, setShowCropper] = useState(false);
+  const [croppedImageUrl, setCroppedImageUrl] = useState<string | null>(null);
+
+  const resetCropState = useCallback(() => {
+    setShowCropper(false);
+    setCrop(undefined);
+    setCompletedCrop(undefined);
+    setCroppedImageUrl(null);
+  }, []);
+
   const selectedImageUri = generatedImages?.find(img => img.ratio === selectedRatio)?.imageUri || null;
 
   const refreshSamplePhrases = useCallback(() => {
@@ -151,7 +206,8 @@ export function CalligraphyGenerator() {
     if (generatedImages && generatedImages.length > 0 && !selectedRatio) {
       setSelectedRatio(generatedImages[0].ratio);
     }
-  }, [generatedImages, selectedRatio]);
+    resetCropState(); // Reset crop when new images are loaded or ratio changes
+  }, [generatedImages, selectedRatio, resetCropState]);
 
   useEffect(() => {
     refreshSamplePhrases();
@@ -174,6 +230,7 @@ export function CalligraphyGenerator() {
       setSelectedRatio(null);
       setExplanationEn(null);
       setExplanationZh(null);
+      resetCropState();
       try {
         const input: AIEnhancedSpacingInput = {
           chinesePhrase: phrase,
@@ -222,19 +279,21 @@ export function CalligraphyGenerator() {
     }
   };
 
-  const handleDownloadImage = () => {
-    if (!selectedImageUri || !selectedRatio) return;
+  const handleDownloadImage = (isCropped = false) => {
+    const uriToDownload = isCropped ? croppedImageUrl : selectedImageUri;
+    if (!uriToDownload || !selectedRatio) return;
+
     const link = document.createElement("a");
-    link.href = selectedImageUri;
+    link.href = uriToDownload;
     const safePhrase = phrase.replace(/[^\u4e00-\u9fa5\w\s]/g, '').substring(0, 20) || "calligraphy";
     const safeRatio = selectedRatio.replace(':', '-');
-    link.download = `brushverse_${safePhrase}_${safeRatio}.png`;
+    link.download = `brushverse_${safePhrase}_${safeRatio}${isCropped ? '_cropped' : ''}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     toast({
-      title: "Image Downloaded",
-      description: `The ${selectedRatio} image has been saved to your device.`,
+      title: `Image ${isCropped ? 'Cropped ' : ''}Downloaded`,
+      description: `The ${isCropped ? 'cropped' : selectedRatio} image has been saved.`,
     });
   };
 
@@ -253,6 +312,22 @@ export function CalligraphyGenerator() {
         title: "Phrase Updated",
         description: `Input set to: "${value}"`,
       });
+    }
+  };
+
+  const onApplyCrop = async () => {
+    if (!completedCrop || !imgRef.current || !selectedImageUri) {
+      toast({ title: "Crop Error", description: "Cannot apply crop. Please select an area.", variant: "destructive"});
+      return;
+    }
+    try {
+      const cropped = await getCroppedImg(selectedImageUri, completedCrop);
+      setCroppedImageUrl(cropped);
+      setShowCropper(false); // Optionally hide cropper after applying
+      toast({ title: "Crop Applied", description: "You can now download the cropped image."});
+    } catch (e) {
+      console.error("Error cropping image:", e);
+      toast({ title: "Crop Failed", description: "Could not crop the image.", variant: "destructive"});
     }
   };
 
@@ -444,7 +519,8 @@ export function CalligraphyGenerator() {
           <CardContent 
              className={cn(
                 "min-h-[300px] max-h-[75vh] overflow-y-auto rounded-md p-4 flex flex-col",
-                (!selectedImageUri && !isPending) && "items-center justify-center" 
+                (!selectedImageUri && !isPending) && "items-center justify-center",
+                showCropper && "overflow-visible" // Allow cropper to overflow if needed
               )}
             style={{ backgroundColor: backgroundImageTheme === backgroundThemeOptions[0].value ? backgroundColor : 'transparent' }}
           >
@@ -457,22 +533,41 @@ export function CalligraphyGenerator() {
             )}
             {!isPending && selectedImageUri && (
               <div className="w-full space-y-4">
-                <div
-                  className={cn(
-                    "w-full rounded-md overflow-hidden shadow-inner mx-auto flex items-center justify-center",
-                     (borderStyle === 'none' && backgroundImageTheme === backgroundThemeOptions[0].value) && "border border-border" 
-                  )}
-                  style={{ backgroundColor: backgroundImageTheme === backgroundThemeOptions[0].value ? backgroundColor : 'transparent' }}
-                >
-                   <img
-                    src={selectedImageUri}
-                    alt={`Generated Calligraphy (${selectedRatio})`}
-                    style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto' }}
-                    className="rounded-md"
-                    data-ai-hint="calligraphy art"
-                    />
+                 <div
+                    className={cn(
+                        "w-full rounded-md overflow-hidden shadow-inner mx-auto flex items-center justify-center",
+                        (borderStyle === 'none' && backgroundImageTheme === backgroundThemeOptions[0].value) && "border border-border"
+                    )}
+                    style={{ backgroundColor: backgroundImageTheme === backgroundThemeOptions[0].value ? backgroundColor : 'transparent' }}
+                    >
+                    {showCropper ? (
+                        <ReactCrop
+                        crop={crop}
+                        onChange={(_, percentCrop) => setCrop(percentCrop)}
+                        onComplete={(c) => setCompletedCrop(c)}
+                        className="max-w-full max-h-[60vh]"
+                        >
+                        <img
+                            ref={imgRef}
+                            src={selectedImageUri}
+                            alt="Crop preview"
+                            style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '60vh' }}
+                            data-ai-hint="calligraphy art"
+                        />
+                        </ReactCrop>
+                    ) : (
+                        <img
+                        ref={imgRef} // Keep ref here for potential dimension reading even if not cropping
+                        src={croppedImageUrl || selectedImageUri} // Show cropped image if available
+                        alt={`Generated Calligraphy (${selectedRatio})`}
+                        style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto' }}
+                        className="rounded-md"
+                        data-ai-hint="calligraphy art"
+                        />
+                    )}
                 </div>
-                {explanationEn && explanationZh && (
+
+                {explanationEn && explanationZh && !showCropper && (
                   <div className="bg-background/80 p-3 rounded-md border border-border backdrop-blur-sm">
                     <div className="flex justify-between items-center mb-1">
                       <h4 className="font-semibold text-accent">{explanationTitles[explanationLanguage]}</h4>
@@ -509,24 +604,58 @@ export function CalligraphyGenerator() {
                   <Button
                     key={imgInfo.ratio}
                     variant={selectedRatio === imgInfo.ratio ? "default" : "outline"}
-                    onClick={() => setSelectedRatio(imgInfo.ratio)}
+                    onClick={() => { setSelectedRatio(imgInfo.ratio); resetCropState(); }}
                     className="flex-1"
                     aria-label={`Select ${imgInfo.label} ratio (${imgInfo.ratio})`}
+                    disabled={showCropper}
                   >
                     {imgInfo.label} ({imgInfo.ratio})
                   </Button>
                 ))}
               </div>
-              <Button
-                onClick={handleDownloadImage}
-                variant="outline"
-                className="w-full text-lg py-6 border-primary text-primary hover:bg-primary/10"
-                aria-label="Download Calligraphy Image"
-                disabled={!selectedImageUri}
-              >
-                <Download className="mr-2 h-6 w-6" />
-                Download Selected Image
-              </Button>
+              {showCropper && selectedImageUri && (
+                <div className="flex space-x-2">
+                    <Button onClick={onApplyCrop} className="flex-1" variant="default" disabled={!completedCrop || !selectedImageUri}>
+                        <Crop className="mr-2 h-5 w-5"/> Apply Crop
+                    </Button>
+                    <Button onClick={resetCropState} className="flex-1" variant="outline">
+                        Cancel Crop
+                    </Button>
+                </div>
+              )}
+              <div className="flex space-x-2">
+                <Button
+                    onClick={() => setShowCropper(prev => !prev)}
+                    variant="outline"
+                    className="flex-1"
+                    aria-label={showCropper ? "Cancel Cropping" : "Enable Cropping"}
+                    disabled={!selectedImageUri || isPending}
+                    >
+                    <Crop className="mr-2 h-5 w-5" />
+                    {showCropper ? "Cancel Cropping" : "Enable Cropping"}
+                </Button>
+                <Button
+                    onClick={() => handleDownloadImage(false)}
+                    variant="outline"
+                    className="flex-1 border-primary text-primary hover:bg-primary/10"
+                    aria-label="Download Original Calligraphy Image"
+                    disabled={!selectedImageUri || showCropper}
+                    >
+                    <Download className="mr-2 h-5 w-5" />
+                    Download Original
+                </Button>
+              </div>
+              {croppedImageUrl && !showCropper && (
+                 <Button
+                    onClick={() => handleDownloadImage(true)}
+                    variant="default"
+                    className="w-full text-lg py-3 bg-green-600 hover:bg-green-700"
+                    aria-label="Download Cropped Calligraphy Image"
+                    >
+                    <Download className="mr-2 h-6 w-6" />
+                    Download Cropped Image
+                </Button>
+              )}
             </CardFooter>
           )}
         </Card>
