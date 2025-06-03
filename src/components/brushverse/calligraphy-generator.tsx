@@ -157,6 +157,11 @@ async function getCroppedImg(
   );
 
   return new Promise((resolve) => {
+    // Check if canvas is 0x0, if so, return 'data:,' to indicate an empty image more explicitly if needed
+    if (pixelCrop.width === 0 || pixelCrop.height === 0) {
+        resolve('data:,'); // Empty data URI
+        return;
+    }
     resolve(canvas.toDataURL('image/png'));
   });
 }
@@ -281,7 +286,14 @@ export function CalligraphyGenerator() {
 
   const handleDownloadImage = (isCropped = false) => {
     const uriToDownload = isCropped ? croppedImageUrl : selectedImageUri;
-    if (!uriToDownload || !selectedRatio) return;
+    if (!uriToDownload || uriToDownload === 'data:,' || !selectedRatio) {
+        toast({
+            title: "Download Error",
+            description: "No valid image to download.",
+            variant: "destructive",
+        });
+        return;
+    }
 
     const link = document.createElement("a");
     link.href = uriToDownload;
@@ -316,15 +328,23 @@ export function CalligraphyGenerator() {
   };
 
   const onApplyCrop = async () => {
-    if (!completedCrop || !imgRef.current || !selectedImageUri) {
+    if (!completedCrop || !imgRef.current || !selectedImageUri ) {
       toast({ title: "Crop Error", description: "Cannot apply crop. Please select an area.", variant: "destructive"});
+      return;
+    }
+    if (completedCrop.width === 0 || completedCrop.height === 0) {
+      toast({ title: "Crop Error", description: "Crop selection has no width or height. Please select a valid area.", variant: "destructive"});
       return;
     }
     try {
       const cropped = await getCroppedImg(selectedImageUri, completedCrop);
-      setCroppedImageUrl(cropped);
-      setShowCropper(false); 
-      toast({ title: "Crop Applied", description: "You can now download the cropped image."});
+      if (cropped && cropped !== 'data:,') {
+        setCroppedImageUrl(cropped);
+        setShowCropper(false); 
+        toast({ title: "Crop Applied", description: "You can now download the cropped image."});
+      } else {
+        toast({ title: "Crop Failed", description: "Could not crop the image or crop area was invalid.", variant: "destructive"});
+      }
     } catch (e) {
       console.error("Error cropping image:", e);
       toast({ title: "Crop Failed", description: "Could not crop the image.", variant: "destructive"});
@@ -335,6 +355,9 @@ export function CalligraphyGenerator() {
     en: "AI Spacing Explanation:",
     zh: "AI 間距調整說明："
   };
+
+  const imageToDisplay = (croppedImageUrl && croppedImageUrl !== 'data:,') ? croppedImageUrl : selectedImageUri;
+
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -522,7 +545,7 @@ export function CalligraphyGenerator() {
                 (!selectedImageUri && !isPending) && "items-center justify-center",
                 showCropper && "overflow-visible" 
               )}
-             style={{ backgroundColor: (showCropper || (backgroundImageTheme !== backgroundThemeOptions[0].value && backgroundImageTheme)) ? 'transparent' : backgroundColor }}
+             style={{ backgroundColor: (showCropper || (backgroundImageTheme !== backgroundThemeOptions[0].value && backgroundImageTheme && selectedImageUri)) ? 'transparent' : backgroundColor }}
           >
             {isPending && (
               <div className="flex flex-col items-center justify-center text-center h-full">
@@ -531,16 +554,16 @@ export function CalligraphyGenerator() {
                 <p className="text-sm text-muted-foreground">Using theme: {backgroundImageTheme !== backgroundThemeOptions[0].value ? backgroundImageTheme : 'Solid Color'}</p>
               </div>
             )}
-            {!isPending && selectedImageUri && (
+            {!isPending && imageToDisplay && (
               <div className="w-full space-y-4">
                  <div
                     className={cn(
                         "w-full rounded-md overflow-hidden shadow-inner mx-auto flex items-center justify-center",
                         (borderStyle === 'none' && backgroundImageTheme === backgroundThemeOptions[0].value && !showCropper) && "border border-border"
                     )}
-                    style={{ backgroundColor: (showCropper || backgroundImageTheme !== backgroundThemeOptions[0].value && backgroundImageTheme) ? 'transparent' : backgroundColor }}
+                     style={{ backgroundColor: (showCropper || (backgroundImageTheme !== backgroundThemeOptions[0].value && backgroundImageTheme)) ? 'transparent' : backgroundColor }}
                     >
-                    {showCropper ? (
+                    {showCropper && selectedImageUri ? ( // Ensure selectedImageUri exists for cropper
                         <ReactCrop
                         crop={crop}
                         onChange={(_, percentCrop) => setCrop(percentCrop)}
@@ -549,7 +572,7 @@ export function CalligraphyGenerator() {
                         >
                         <img
                             ref={imgRef}
-                            src={selectedImageUri}
+                            src={selectedImageUri} 
                             alt="Crop preview" 
                             data-ai-hint="calligraphy art"
                         />
@@ -557,8 +580,8 @@ export function CalligraphyGenerator() {
                     ) : (
                         <img
                         ref={imgRef} 
-                        src={croppedImageUrl || selectedImageUri} 
-                        alt={`Generated Calligraphy (${selectedRatio})`}
+                        src={imageToDisplay} 
+                        alt={`Generated Calligraphy (${selectedRatio || 'Preview'})`}
                         style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto' }}
                         className="rounded-md"
                         data-ai-hint="calligraphy art"
@@ -588,7 +611,7 @@ export function CalligraphyGenerator() {
                 )}
               </div>
             )}
-            {!isPending && !selectedImageUri && (
+            {!isPending && !imageToDisplay && (
               <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-full">
                 <Palette className="h-16 w-16 mx-auto mb-4 opacity-50" />
                 <p className="text-lg">Your artwork will be shown here.</p>
@@ -631,7 +654,7 @@ export function CalligraphyGenerator() {
                     disabled={!selectedImageUri || isPending}
                     >
                     <Crop className="mr-2 h-5 w-5" />
-                    {showCropper ? "Cancel Cropping" : "Enable Cropping"}
+                    {showCropper ? "Cancel Cropping" : "Crop Image"}
                 </Button>
                 <Button
                     onClick={() => handleDownloadImage(false)}
@@ -644,7 +667,7 @@ export function CalligraphyGenerator() {
                     Download Original
                 </Button>
               </div>
-              {croppedImageUrl && !showCropper && (
+              {croppedImageUrl && croppedImageUrl !== 'data:,' && !showCropper && (
                  <Button
                     onClick={() => handleDownloadImage(true)}
                     variant="default"
@@ -665,3 +688,6 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
+
+
+    
