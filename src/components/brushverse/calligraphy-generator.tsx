@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Crop, Download, Image as ImageIcon, Languages, List, Loader2, Palette, PenTool, RefreshCcw, Sparkles, Square, TextCursorInput, WholeWord } from "lucide-react";
 import { useState, useTransition, type KeyboardEvent, useEffect, useCallback, useRef } from "react";
-import ReactCrop, { type Crop as CropType, type PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
+import ReactCrop, { type Crop as CropType, type PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 
 const fontOptions = [
@@ -206,7 +206,7 @@ export function CalligraphyGenerator() {
     if (generatedImages && generatedImages.length > 0 && !selectedRatio) {
       setSelectedRatio(generatedImages[0].ratio);
     }
-    resetCropState(); // Reset crop when new images are loaded or ratio changes
+    resetCropState(); 
   }, [generatedImages, selectedRatio, resetCropState]);
 
   useEffect(() => {
@@ -323,7 +323,7 @@ export function CalligraphyGenerator() {
     try {
       const cropped = await getCroppedImg(selectedImageUri, completedCrop);
       setCroppedImageUrl(cropped);
-      setShowCropper(false); // Optionally hide cropper after applying
+      setShowCropper(false); 
       toast({ title: "Crop Applied", description: "You can now download the cropped image."});
     } catch (e) {
       console.error("Error cropping image:", e);
@@ -520,9 +520,9 @@ export function CalligraphyGenerator() {
              className={cn(
                 "min-h-[300px] max-h-[75vh] overflow-y-auto rounded-md p-4 flex flex-col",
                 (!selectedImageUri && !isPending) && "items-center justify-center",
-                showCropper && "overflow-visible" // Allow cropper to overflow if needed
+                showCropper && "overflow-visible" 
               )}
-            style={{ backgroundColor: backgroundImageTheme === backgroundThemeOptions[0].value ? backgroundColor : 'transparent' }}
+             style={{ backgroundColor: (showCropper || (backgroundImageTheme !== backgroundThemeOptions[0].value && backgroundImageTheme)) ? 'transparent' : backgroundColor }}
           >
             {isPending && (
               <div className="flex flex-col items-center justify-center text-center h-full">
@@ -536,29 +536,28 @@ export function CalligraphyGenerator() {
                  <div
                     className={cn(
                         "w-full rounded-md overflow-hidden shadow-inner mx-auto flex items-center justify-center",
-                        (borderStyle === 'none' && backgroundImageTheme === backgroundThemeOptions[0].value) && "border border-border"
+                        (borderStyle === 'none' && backgroundImageTheme === backgroundThemeOptions[0].value && !showCropper) && "border border-border"
                     )}
-                    style={{ backgroundColor: backgroundImageTheme === backgroundThemeOptions[0].value ? backgroundColor : 'transparent' }}
+                    style={{ backgroundColor: (showCropper || backgroundImageTheme !== backgroundThemeOptions[0].value && backgroundImageTheme) ? 'transparent' : backgroundColor }}
                     >
                     {showCropper ? (
                         <ReactCrop
                         crop={crop}
                         onChange={(_, percentCrop) => setCrop(percentCrop)}
                         onComplete={(c) => setCompletedCrop(c)}
-                        className="max-w-full max-h-[60vh]"
+                        className="max-w-full max-h-[60vh] bg-background/50"
                         >
                         <img
                             ref={imgRef}
                             src={selectedImageUri}
-                            alt="Crop preview"
-                            style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '60vh' }}
+                            alt="Crop preview" 
                             data-ai-hint="calligraphy art"
                         />
                         </ReactCrop>
                     ) : (
                         <img
-                        ref={imgRef} // Keep ref here for potential dimension reading even if not cropping
-                        src={croppedImageUrl || selectedImageUri} // Show cropped image if available
+                        ref={imgRef} 
+                        src={croppedImageUrl || selectedImageUri} 
                         alt={`Generated Calligraphy (${selectedRatio})`}
                         style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto' }}
                         className="rounded-md"
