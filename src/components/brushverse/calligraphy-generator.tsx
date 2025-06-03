@@ -12,8 +12,8 @@ import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Download, Image as ImageIcon, Languages, List, Loader2, Palette, PenTool, Sparkles, Square, TextCursorInput, WholeWord } from "lucide-react";
-import { useState, useTransition, type KeyboardEvent, useEffect } from "react";
+import { Download, Image as ImageIcon, Languages, List, Loader2, Palette, PenTool, RefreshCcw, Sparkles, Square, TextCursorInput, WholeWord } from "lucide-react";
+import { useState, useTransition, type KeyboardEvent, useEffect, useCallback } from "react";
 
 const fontOptions = [
   { value: "KaiTi", label: "Regular Script (楷體 - KaiTi)" },
@@ -103,16 +103,21 @@ const backgroundThemeOptions = [
     { value: 'Silk Texture with Faint Floral Pattern', label: 'Silk with Faint Florals' },
 ];
 
-type GeneratedImageInfo = {
-  ratio: string;
-  imageUri: string;
-  label: string;
-};
+type GeneratedImageInfo = AIEnhancedSpacingOutput["generatedImages"][0];
 
 type SamplePhrase = {
   id: string;
   text: string;
   description: string;
+};
+
+const shuffleArray = (array: SamplePhrase[]) => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
 };
 
 export function CalligraphyGenerator() {
@@ -138,6 +143,10 @@ export function CalligraphyGenerator() {
 
   const selectedImageUri = generatedImages?.find(img => img.ratio === selectedRatio)?.imageUri || null;
 
+  const refreshSamplePhrases = useCallback(() => {
+    setDisplayedSamplePhrases(shuffleArray(allSamplePhrases).slice(0, 4));
+  }, []);
+
   useEffect(() => {
     if (generatedImages && generatedImages.length > 0 && !selectedRatio) {
       setSelectedRatio(generatedImages[0].ratio);
@@ -145,16 +154,8 @@ export function CalligraphyGenerator() {
   }, [generatedImages, selectedRatio]);
 
   useEffect(() => {
-    const shuffleArray = (array: SamplePhrase[]) => {
-      const newArray = [...array];
-      for (let i = newArray.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-      }
-      return newArray;
-    };
-    setDisplayedSamplePhrases(shuffleArray(allSamplePhrases).slice(0, 4));
-  }, []);
+    refreshSamplePhrases();
+  }, [refreshSamplePhrases]);
 
 
   const handleGenerateImage = async () => {
@@ -393,7 +394,12 @@ export function CalligraphyGenerator() {
                   </SelectContent>
                 </Select>
               </div>
-              <p className="text-sm text-muted-foreground">Quick samples:</p>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">Quick samples:</p>
+                <Button variant="ghost" size="sm" onClick={refreshSamplePhrases} aria-label="Refresh quick samples">
+                  <RefreshCcw className="h-4 w-4" />
+                </Button>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {displayedSamplePhrases.map((sample) => (
                   <Button
@@ -531,6 +537,3 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
-
-
-    
