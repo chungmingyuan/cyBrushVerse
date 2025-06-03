@@ -12,7 +12,7 @@ import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Download, Image as ImageIcon, Languages, Loader2, Palette, PenTool, Sparkles, Square, TextCursorInput, WholeWord } from "lucide-react";
+import { Download, Image as ImageIcon, Languages, List, Loader2, Palette, PenTool, Sparkles, Square, TextCursorInput, WholeWord } from "lucide-react";
 import { useState, useTransition, type KeyboardEvent, useEffect } from "react";
 
 const fontOptions = [
@@ -27,13 +27,59 @@ const fontOptions = [
   { value: "Noto Sans TC", label: "Noto Sans TC (思源黑體)"},
 ];
 
-const samplePhrases = [
+const allSamplePhrases = [
   { id: "s1", text: "花好月圓", description: "Blooming flowers and a full moon - A wish for a happy life" },
   { id: "s2", text: "福壽康寧", description: "Good fortune, longevity, health, and peace" },
   { id: "s3", text: "龍馬精神", description: "Spirit of a dragon and horse - Vigor and vitality" },
   { id: "s4", text: "學無止境", description: "Learning is endless" },
   { id: "s5", text: "靜以修身", description: "Cultivate oneself through tranquility" },
+  { id: "s6", text: "厚德載物", description: "Great virtue carries all things - Be virtuous and tolerant" },
+  { id: "s7", text: "自強不息", description: "Strive constantly for self-improvement" },
+  { id: "s8", text: "登高望遠", description: "Climb high and look far - Aim high and have a broad perspective" },
+  { id: "s9", text: "海納百川", description: "The sea accepts all rivers - Be open-minded and inclusive" },
+  { id: "s10", text: "道法自然", description: "The Tao follows nature - Live in accordance with nature" },
+  { id: "s11", text: "天道酬勤", description: "Heaven rewards the diligent" },
+  { id: "s12", text: "虛懷若谷", description: "Modest as an empty valley - Be humble" },
+  { id: "s13", text: "積健為雄", description: "Accumulate strength to become powerful" },
+  { id: "s14", text: "和氣致祥", description: "Harmony brings auspiciousness" },
+  { id: "s15", text: "心想事成", description: "May all your wishes come true" },
+  { id: "s16", text: "萬事如意", description: "May everything go as you wish" },
+  { id: "s17", text: "一帆風順", description: "Smooth sailing - May your endeavors go smoothly" },
+  { id: "s18", text: "歲月靜好", description: "Years are quiet and good - Peaceful and beautiful times" },
+  { id: "s19", text: "知足常樂", description: "Contentment brings happiness" },
+  { id: "s20", text: "大道至簡", description: "The great way is simple" },
+  { id: "s21", text: "上善若水", description: "The highest good is like water - Be adaptable and beneficial" },
+  { id: "s22", text: "寧靜致遠", description: "Tranquility leads to far-reaching wisdom" },
+  { id: "s23", text: "春華秋實", description: "Spring flowers, autumn fruits - Efforts yield results" },
+  { id: "s24", text: "格物致知", description: "Investigate things to extend knowledge" },
+  { id: "s25", text: "誠意正心", description: "Sincerity of intent rectifies the mind" },
+  { id: "s26", text: "修身齊家", description: "Cultivate oneself, regulate the family" },
+  { id: "s27", text: "治國平天下", description: "Govern the state, bring peace to the world (aspirational)" },
+  { id: "s28", text: "仁者愛人", description: "The benevolent love others" },
+  { id: "s29", text: "禮尚往來", description: "Courtesy demands reciprocity" },
+  { id: "s30", text: "温故知新", description: "Review the old to learn the new" },
+  { id: "s31", text: "學而不厭", description: "Learn without satiety" },
+  { id: "s32", text: "誨人不倦", description: "Teach without weariness" },
+  { id: "s33", text: "見賢思齊", description: "Emulate virtuous people when you see them" },
+  { id: "s34", text: "三思而行", description: "Think thrice before acting" },
+  { id: "s35", text: "言必信行必果", description: "Be true to your word and resolute in your actions" },
+  { id: "s36", text: "任重道遠", description: "The burden is heavy and the road is long - A difficult task" },
+  { id: "s37", text: "己所不欲勿施於人", description: "Do not do to others what you do not want done to yourself" },
+  { id: "s38", text: "敏於事慎於言", description: "Be quick in action and cautious in speech" },
+  { id: "s39", text: "君子和而不同", description: "A gentleman seeks harmony but not conformity" },
+  { id: "s40", text: "小人同而不和", description: "A petty person seeks conformity but not harmony" },
+  { id: "s41", text: "博學篤志", description: "Learn broadly and be steadfast in purpose" },
+  { id: "s42", text: "切問近思", description: "Inquire earnestly and reflect on what is at hand" },
+  { id: "s43", text: "精益求精", description: "Constantly strive for perfection" },
+  { id: "s44", text: "持之以恆", description: "Persevere" },
+  { id: "s45", text: "集思廣益", description: "Draw on collective wisdom for greater benefit" },
+  { id: "s46", text: "飲水思源", description: "When drinking water, remember its source - Be grateful" },
+  { id: "s47", text: "鵬程萬里", description: "A roc’s flight of ten thousand li - A bright future" },
+  { id: "s48", text: "馬到成功", description: "Instant success upon arrival (like a swift horse)" },
+  { id: "s49", text: "一諾千金", description: "A promise is worth a thousand pieces of gold - Keep your promises" },
+  { id: "s50", text: "樂在其中", description: "Find joy in it" },
 ];
+
 
 const borderOptions = [
     { value: 'none', label: 'No Border' },
@@ -63,6 +109,12 @@ type GeneratedImageInfo = {
   label: string;
 };
 
+type SamplePhrase = {
+  id: string;
+  text: string;
+  description: string;
+};
+
 export function CalligraphyGenerator() {
   const [phrase, setPhrase] = useState<string>("你好世界");
   const [fontFamily, setFontFamily] = useState<string>(fontOptions[0].value);
@@ -78,6 +130,8 @@ export function CalligraphyGenerator() {
   const [explanationEn, setExplanationEn] = useState<string | null>(null);
   const [explanationZh, setExplanationZh] = useState<string | null>(null);
   const [explanationLanguage, setExplanationLanguage] = useState<'en' | 'zh'>('en');
+
+  const [displayedSamplePhrases, setDisplayedSamplePhrases] = useState<SamplePhrase[]>([]);
   
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -89,6 +143,19 @@ export function CalligraphyGenerator() {
       setSelectedRatio(generatedImages[0].ratio);
     }
   }, [generatedImages, selectedRatio]);
+
+  useEffect(() => {
+    const shuffleArray = (array: SamplePhrase[]) => {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    };
+    setDisplayedSamplePhrases(shuffleArray(allSamplePhrases).slice(0, 4));
+  }, []);
+
 
   const handleGenerateImage = async () => {
     if (!phrase.trim()) {
@@ -120,7 +187,7 @@ export function CalligraphyGenerator() {
         
         if (result.generatedImages && result.generatedImages.length > 0) {
           setGeneratedImages(result.generatedImages);
-          setSelectedRatio(result.generatedImages[0].ratio); // Default to the first generated ratio
+          setSelectedRatio(result.generatedImages[0].ratio); 
           setExplanationEn(result.explanationEn);
           setExplanationZh(result.explanationZh);
           toast({
@@ -176,6 +243,16 @@ export function CalligraphyGenerator() {
       title: "Phrase Updated",
       description: `Input set to: "${sampleText}"`,
     });
+  };
+
+  const handleSamplePhraseSelect = (value: string) => {
+    if (value) {
+      setPhrase(value);
+      toast({
+        title: "Phrase Updated",
+        description: `Input set to: "${value}"`,
+      });
+    }
   };
 
   const explanationTitles = {
@@ -301,8 +378,24 @@ export function CalligraphyGenerator() {
 
             <div className="space-y-4">
               <Label className="text-lg flex items-center"><Sparkles className="mr-2 h-5 w-5 text-accent" />Sample Phrases (Traditional)</Label>
+              <div className="space-y-2">
+                <Label htmlFor="samplePhraseSelect" className="text-base flex items-center"><List className="mr-2 h-5 w-5 text-accent" />Or pick from a list:</Label>
+                 <Select onValueChange={handleSamplePhraseSelect}>
+                  <SelectTrigger id="samplePhraseSelect" className="text-base focus:ring-primary">
+                    <SelectValue placeholder="Select a sample phrase..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {allSamplePhrases.map((sample) => (
+                      <SelectItem key={sample.id} value={sample.text} className="text-base">
+                        {sample.text} <span className="text-xs text-muted-foreground ml-2">({sample.description})</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <p className="text-sm text-muted-foreground">Quick samples:</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {samplePhrases.map((sample) => (
+                {displayedSamplePhrases.map((sample) => (
                   <Button
                     key={sample.id}
                     variant="outline"
@@ -438,3 +531,6 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
+
+
+    
