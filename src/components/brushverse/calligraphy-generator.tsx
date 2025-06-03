@@ -124,15 +124,23 @@ const shuffleArray = (array: SamplePhrase[]) => {
 
 // Helper function to create a data URL for the cropped image
 async function getCroppedImg(
-  imageSrc: string,
+  imageSrc: string, // Keep receiving imageSrc for creating the new Image object
   pixelCrop: PixelCrop
 ): Promise<string | null> {
   const image = new Image();
-  image.crossOrigin = 'anonymous'; // Handle CORS if image is from another domain
+  image.crossOrigin = 'anonymous';
   image.src = imageSrc;
+
+  // Wait for the image to load to ensure naturalWidth/Height are available
   await new Promise((resolve, reject) => {
-    image.onload = resolve;
-    image.onerror = reject;
+    image.onload = () => {
+      if (image.naturalWidth === 0 || image.naturalHeight === 0) {
+        reject(new Error('Image loaded with zero dimensions'));
+      } else {
+        resolve(image);
+      }
+    };
+    image.onerror = (err) => reject(err);
   });
 
   const canvas = document.createElement('canvas');
@@ -141,25 +149,26 @@ async function getCroppedImg(
   const ctx = canvas.getContext('2d');
 
   if (!ctx) {
+    console.error('Failed to get canvas context');
     return null;
   }
-
+  
+  // Draw the cropped portion of the original image onto the canvas
   ctx.drawImage(
-    image,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    pixelCrop.width,
-    pixelCrop.height
+    image, // The source image object
+    pixelCrop.x, // sx: The x-axis coordinate of the top left corner of the sub-rectangle of the source image
+    pixelCrop.y, // sy: The y-axis coordinate of the top left corner of the sub-rectangle of the source image
+    pixelCrop.width, // sWidth: The width of the sub-rectangle of the source image
+    pixelCrop.height, // sHeight: The height of the sub-rectangle of the source image
+    0, // dx: The x-axis coordinate in the destination canvas at which to place the top-left corner of the source image.
+    0, // dy: The y-axis coordinate in the destination canvas at which to place the top-left corner of the source image.
+    pixelCrop.width, // dWidth: The width to draw the image in the destination canvas.
+    pixelCrop.height // dHeight: The height to draw the image in the destination canvas.
   );
 
   return new Promise((resolve) => {
-    // Check if canvas is 0x0, if so, return 'data:,' to indicate an empty image more explicitly if needed
     if (pixelCrop.width === 0 || pixelCrop.height === 0) {
-        resolve('data:,'); // Empty data URI
+        resolve('data:,'); 
         return;
     }
     resolve(canvas.toDataURL('image/png'));
@@ -328,15 +337,19 @@ export function CalligraphyGenerator() {
   };
 
   const onApplyCrop = async () => {
-    if (!completedCrop || !imgRef.current || !selectedImageUri ) {
-      toast({ title: "Crop Error", description: "Cannot apply crop. Please select an area.", variant: "destructive"});
+    if (!completedCrop || !selectedImageUri ) { // imgRef.current check removed as getCroppedImg now reloads from selectedImageUri
+      toast({ title: "Crop Error", description: "Cannot apply crop. Please select an area or ensure an image is loaded.", variant: "destructive"});
       return;
     }
     if (completedCrop.width === 0 || completedCrop.height === 0) {
       toast({ title: "Crop Error", description: "Crop selection has no width or height. Please select a valid area.", variant: "destructive"});
       return;
     }
+
+    console.log('Applying crop with completedCrop:', JSON.stringify(completedCrop)); // DEBUG LOG
+
     try {
+      // Pass selectedImageUri to getCroppedImg, which will load it.
       const cropped = await getCroppedImg(selectedImageUri, completedCrop);
       if (cropped && cropped !== 'data:,') {
         setCroppedImageUrl(cropped);
@@ -347,7 +360,7 @@ export function CalligraphyGenerator() {
       }
     } catch (e) {
       console.error("Error cropping image:", e);
-      toast({ title: "Crop Failed", description: "Could not crop the image.", variant: "destructive"});
+      toast({ title: "Crop Failed", description: `Could not crop the image: ${e instanceof Error ? e.message : String(e)}`, variant: "destructive"});
     }
   };
 
@@ -563,11 +576,11 @@ export function CalligraphyGenerator() {
                     )}
                      style={{ backgroundColor: (showCropper || (backgroundImageTheme !== backgroundThemeOptions[0].value && backgroundImageTheme)) ? 'transparent' : backgroundColor }}
                     >
-                    {showCropper && selectedImageUri ? ( // Ensure selectedImageUri exists for cropper
+                    {showCropper && selectedImageUri ? ( 
                         <ReactCrop
                         crop={crop}
                         onChange={(_, percentCrop) => setCrop(percentCrop)}
-                        onComplete={(c) => setCompletedCrop(c)}
+                        onComplete={(c, pc) => setCompletedCrop(pc)} // Use pc (pixelCrop)
                         className="max-w-full max-h-[60vh] bg-background/50"
                         >
                         <img
@@ -650,7 +663,7 @@ export function CalligraphyGenerator() {
                     onClick={() => setShowCropper(prev => !prev)}
                     variant="outline"
                     className="flex-1"
-                    aria-label={showCropper ? "Cancel Cropping" : "Enable Cropping"}
+                    aria-label={showCropper ? "Cancel Cropping" : "Crop Image"}
                     disabled={!selectedImageUri || isPending}
                     >
                     <Crop className="mr-2 h-5 w-5" />
@@ -688,6 +701,5 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
-
 
     
