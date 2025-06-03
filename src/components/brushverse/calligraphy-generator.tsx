@@ -122,16 +122,14 @@ const shuffleArray = (array: SamplePhrase[]) => {
   return newArray;
 };
 
-// Helper function to create a data URL for the cropped image
 async function getCroppedImg(
-  imageSrc: string, // Keep receiving imageSrc for creating the new Image object
-  pixelCrop: PixelCrop
+  imageSrc: string,
+  crop: CropType // CropType can be PercentCrop or PixelCrop
 ): Promise<string | null> {
   const image = new Image();
   image.crossOrigin = 'anonymous';
   image.src = imageSrc;
 
-  // Wait for the image to load to ensure naturalWidth/Height are available
   await new Promise((resolve, reject) => {
     image.onload = () => {
       if (image.naturalWidth === 0 || image.naturalHeight === 0) {
@@ -143,34 +141,53 @@ async function getCroppedImg(
     image.onerror = (err) => reject(err);
   });
 
+  if (crop.width === 0 || crop.height === 0) {
+    return 'data:,'; // Return empty data URI for zero-dimension crop
+  }
+
   const canvas = document.createElement('canvas');
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
   const ctx = canvas.getContext('2d');
 
   if (!ctx) {
     console.error('Failed to get canvas context');
     return null;
   }
+
+  let pixelX: number, pixelY: number, pixelWidth: number, pixelHeight: number;
+
+  if (crop.unit === '%') {
+    pixelX = (crop.x / 100) * image.naturalWidth;
+    pixelY = (crop.y / 100) * image.naturalHeight;
+    pixelWidth = (crop.width / 100) * image.naturalWidth;
+    pixelHeight = (crop.height / 100) * image.naturalHeight;
+  } else { // Assuming 'px' or unitless implies pixels
+    pixelX = crop.x;
+    pixelY = crop.y;
+    pixelWidth = crop.width;
+    pixelHeight = crop.height;
+  }
   
-  // Draw the cropped portion of the original image onto the canvas
+  // Ensure calculated pixel dimensions are not zero before setting canvas size
+  if (pixelWidth === 0 || pixelHeight === 0) {
+    return 'data:,';
+  }
+
+  canvas.width = pixelWidth;
+  canvas.height = pixelHeight;
+
   ctx.drawImage(
-    image, // The source image object
-    pixelCrop.x, // sx: The x-axis coordinate of the top left corner of the sub-rectangle of the source image
-    pixelCrop.y, // sy: The y-axis coordinate of the top left corner of the sub-rectangle of the source image
-    pixelCrop.width, // sWidth: The width of the sub-rectangle of the source image
-    pixelCrop.height, // sHeight: The height of the sub-rectangle of the source image
-    0, // dx: The x-axis coordinate in the destination canvas at which to place the top-left corner of the source image.
-    0, // dy: The y-axis coordinate in the destination canvas at which to place the top-left corner of the source image.
-    pixelCrop.width, // dWidth: The width to draw the image in the destination canvas.
-    pixelCrop.height // dHeight: The height to draw the image in the destination canvas.
+    image,
+    pixelX,
+    pixelY,
+    pixelWidth,
+    pixelHeight,
+    0,
+    0,
+    pixelWidth,
+    pixelHeight
   );
 
   return new Promise((resolve) => {
-    if (pixelCrop.width === 0 || pixelCrop.height === 0) {
-        resolve('data:,'); 
-        return;
-    }
     resolve(canvas.toDataURL('image/png'));
   });
 }
@@ -198,8 +215,8 @@ export function CalligraphyGenerator() {
   const { toast } = useToast();
 
   const imgRef = useRef<HTMLImageElement>(null);
-  const [crop, setCrop] = useState<CropType>();
-  const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+  const [crop, setCrop] = useState<CropType>(); // For visual cropper
+  const [completedCrop, setCompletedCrop] = useState<CropType>(); // For actual cropping logic, can be % or px
   const [showCropper, setShowCropper] = useState(false);
   const [croppedImageUrl, setCroppedImageUrl] = useState<string | null>(null);
 
@@ -337,7 +354,7 @@ export function CalligraphyGenerator() {
   };
 
   const onApplyCrop = async () => {
-    if (!completedCrop || !selectedImageUri ) { // imgRef.current check removed as getCroppedImg now reloads from selectedImageUri
+    if (!completedCrop || !selectedImageUri ) { 
       toast({ title: "Crop Error", description: "Cannot apply crop. Please select an area or ensure an image is loaded.", variant: "destructive"});
       return;
     }
@@ -346,10 +363,7 @@ export function CalligraphyGenerator() {
       return;
     }
 
-    console.log('Applying crop with completedCrop:', JSON.stringify(completedCrop)); // DEBUG LOG
-
     try {
-      // Pass selectedImageUri to getCroppedImg, which will load it.
       const cropped = await getCroppedImg(selectedImageUri, completedCrop);
       if (cropped && cropped !== 'data:,') {
         setCroppedImageUrl(cropped);
@@ -580,7 +594,7 @@ export function CalligraphyGenerator() {
                         <ReactCrop
                         crop={crop}
                         onChange={(_, percentCrop) => setCrop(percentCrop)}
-                        onComplete={(c, pc) => setCompletedCrop(pc)} // Use pc (pixelCrop)
+                        onComplete={(c, pc) => setCompletedCrop(pc)} 
                         className="max-w-full max-h-[60vh] bg-background/50"
                         >
                         <img
@@ -701,5 +715,3 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
-
-    
