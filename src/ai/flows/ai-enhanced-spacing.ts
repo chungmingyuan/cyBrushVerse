@@ -86,8 +86,8 @@ const aiEnhancedSpacingFlow = ai.defineFlow(
   async (input: AIEnhancedSpacingInput): Promise<AIEnhancedSpacingOutput> => {
     const targetRatios = [
       { id: "16:9", label: "Landscape", instruction: "16:9 (a landscape image, wider than it is tall)" },
-      { id: "1:1", label: "Square" , instruction: "1:1 (a perfect square image)"},
       { id: "3:4", label: "Portrait", instruction: "3:4 (a portrait image, taller than it is wide)" },
+      { id: "1:1", label: "Square" , instruction: "1:1 (a perfect square image)"},
     ];
     
     const generatedImagesOutput: Array<{ ratio: string; imageUri: string; label: string }> = [];
