@@ -83,25 +83,25 @@ const allSamplePhrases = [
 ];
 
 const borderOptions = [
-    { value: 'none', label: 'No Border (無邊框)' },
-    { value: 'thin black line', label: 'Thin Black Line (細黑線)' },
-    { value: 'simple dark gray frame (1px)', label: 'Simple Dark Gray Frame (簡約深灰框)' },
-    { value: 'classic red border (2px thickness)', label: 'Classic Red Border (經典紅邊框)' },
-    { value: 'double line border (black, thin)', label: 'Double Line Border (Black) (雙線邊框 (黑色))' },
-    { value: 'ornate wooden picture frame', label: 'Ornate Wooden Picture Frame (華麗木製畫框)' },
-    { value: 'simple gold picture frame', label: 'Simple Gold Picture Frame (簡約金色畫框)' },
-    { value: 'traditional Chinese window lattice border', label: 'Chinese Window Lattice Border (中式窗格邊框)' },
-    { value: 'bamboo frame border', label: 'Bamboo Frame Border (竹框邊框)' },
+    { value: 'none', label_en: 'No Border', label_zh: '無邊框' },
+    { value: 'thin black line', label_en: 'Thin Black Line', label_zh: '細黑線' },
+    { value: 'simple dark gray frame (1px)', label_en: 'Simple Dark Gray Frame', label_zh: '簡約深灰框' },
+    { value: 'classic red border (2px thickness)', label_en: 'Classic Red Border', label_zh: '經典紅邊框' },
+    { value: 'double line border (black, thin)', label_en: 'Double Line Border (Black)', label_zh: '雙線邊框 (黑色)' },
+    { value: 'ornate wooden picture frame', label_en: 'Ornate Wooden Picture Frame', label_zh: '華麗木製畫框' },
+    { value: 'simple gold picture frame', label_en: 'Simple Gold Picture Frame', label_zh: '簡約金色畫框' },
+    { value: 'traditional Chinese window lattice border', label_en: 'Chinese Window Lattice Border', label_zh: '中式窗格邊框' },
+    { value: 'bamboo frame border', label_en: 'Bamboo Frame Border', label_zh: '竹框邊框' },
 ];
 
 const backgroundThemeOptions = [
-    { value: 'Solid Color (Current)', label: 'Solid Color (Current) (純色 (目前))' },
-    { value: 'Subtle Chinese Water Lily Pond', label: 'Subtle Water Lily Pond (雅緻荷塘月色)' },
-    { value: 'Misty Mountains with Pine Trees', label: 'Misty Mountains & Pines (迷霧松山)' },
-    { value: 'Bamboo Grove in Soft Light', label: 'Bamboo Grove (Soft Light) (柔光竹林)' },
-    { value: 'Abstract Ink Wash Landscape', label: 'Abstract Ink Wash Landscape (抽象水墨山水)' },
-    { value: 'Old Parchment Texture', label: 'Old Parchment Texture (舊羊皮紙紋理)' },
-    { value: 'Silk Texture with Faint Floral Pattern', label: 'Silk with Faint Florals (淡雅花紋絲綢)' },
+    { value: 'Solid Color (Current)', label_en: 'Solid Color (Current)', label_zh: '純色 (目前)' },
+    { value: 'Subtle Chinese Water Lily Pond', label_en: 'Subtle Water Lily Pond', label_zh: '雅緻荷塘月色' },
+    { value: 'Misty Mountains with Pine Trees', label_en: 'Misty Mountains & Pines', label_zh: '迷霧松山' },
+    { value: 'Bamboo Grove in Soft Light', label_en: 'Bamboo Grove (Soft Light)', label_zh: '柔光竹林' },
+    { value: 'Abstract Ink Wash Landscape', label_en: 'Abstract Ink Wash Landscape', label_zh: '抽象水墨山水' },
+    { value: 'Old Parchment Texture', label_en: 'Old Parchment Texture', label_zh: '舊羊皮紙紋理' },
+    { value: 'Silk Texture with Faint Floral Pattern', label_en: 'Silk with Faint Florals', label_zh: '淡雅花紋絲綢' },
 ];
 
 const ratioLabels_EN: Record<string, string> = {
@@ -469,7 +469,7 @@ export function CalligraphyGenerator() {
                 value={phrase}
                 onChange={(e) => setPhrase(e.target.value)}
                 onKeyDown={handlePhraseKeyDown}
-                placeholder="例如: 花好月圓"
+                placeholder={showChinese ? "例如: 花好月圓 (範例：花好月圓)" : "e.g., 花好月圓"}
                 className="text-base min-h-[80px] focus:ring-primary"
               />
             </div>
@@ -557,7 +557,7 @@ export function CalligraphyGenerator() {
                 <SelectContent>
                   {borderOptions.map((border) => (
                     <SelectItem key={border.value} value={border.value} className="text-base">
-                      {border.label}
+                      {border.label_en}{showChinese && border.label_zh ? ` (${border.label_zh})` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -577,7 +577,7 @@ export function CalligraphyGenerator() {
                 <SelectContent>
                   {backgroundThemeOptions.map((theme) => (
                     <SelectItem key={theme.value} value={theme.value} className="text-base">
-                      {theme.label}
+                      {theme.label_en}{showChinese && theme.label_zh ? ` (${theme.label_zh})` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
