@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Download, Image as ImageIcon, Languages, Loader2, Palette, PenTool, Sparkles, Square, TextCursorInput, WholeWord } from "lucide-react";
-import { useState, useTransition, type KeyboardEvent } from "react";
+import { useState, useTransition, type KeyboardEvent, useEffect } from "react";
 
 const fontOptions = [
   { value: "KaiTi", label: "Regular Script (楷體 - KaiTi)" },
@@ -57,6 +57,11 @@ const backgroundThemeOptions = [
     { value: 'Silk Texture with Faint Floral Pattern', label: 'Silk with Faint Florals' },
 ];
 
+type GeneratedImageInfo = {
+  ratio: string;
+  imageUri: string;
+  label: string;
+};
 
 export function CalligraphyGenerator() {
   const [phrase, setPhrase] = useState<string>("你好世界");
@@ -67,13 +72,23 @@ export function CalligraphyGenerator() {
   const [borderStyle, setBorderStyle] = useState<string>(borderOptions[0].value);
   const [backgroundImageTheme, setBackgroundImageTheme] = useState<string>(backgroundThemeOptions[0].value);
 
-  const [generatedImageUri, setGeneratedImageUri] = useState<string | null>(null);
+  const [generatedImages, setGeneratedImages] = useState<GeneratedImageInfo[] | null>(null);
+  const [selectedRatio, setSelectedRatio] = useState<string | null>(null);
+  
   const [explanationEn, setExplanationEn] = useState<string | null>(null);
   const [explanationZh, setExplanationZh] = useState<string | null>(null);
   const [explanationLanguage, setExplanationLanguage] = useState<'en' | 'zh'>('en');
   
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+
+  const selectedImageUri = generatedImages?.find(img => img.ratio === selectedRatio)?.imageUri || null;
+
+  useEffect(() => {
+    if (generatedImages && generatedImages.length > 0 && !selectedRatio) {
+      setSelectedRatio(generatedImages[0].ratio);
+    }
+  }, [generatedImages, selectedRatio]);
 
   const handleGenerateImage = async () => {
     if (!phrase.trim()) {
@@ -87,7 +102,8 @@ export function CalligraphyGenerator() {
     if (isPending) return;
 
     startTransition(async () => {
-      setGeneratedImageUri(null);
+      setGeneratedImages(null);
+      setSelectedRatio(null);
       setExplanationEn(null);
       setExplanationZh(null);
       try {
@@ -101,18 +117,28 @@ export function CalligraphyGenerator() {
           backgroundImageTheme: backgroundImageTheme === backgroundThemeOptions[0].value ? undefined : backgroundImageTheme,
         };
         const result: AIEnhancedSpacingOutput = await aiEnhancedSpacing(input);
-        setGeneratedImageUri(result.spacedImageUri);
-        setExplanationEn(result.explanationEn);
-        setExplanationZh(result.explanationZh);
-        toast({
-          title: "Image Generated",
-          description: "Your calligraphy image is ready.",
-        });
+        
+        if (result.generatedImages && result.generatedImages.length > 0) {
+          setGeneratedImages(result.generatedImages);
+          setSelectedRatio(result.generatedImages[0].ratio); // Default to the first generated ratio
+          setExplanationEn(result.explanationEn);
+          setExplanationZh(result.explanationZh);
+          toast({
+            title: "Images Generated",
+            description: "Your calligraphy images are ready in different ratios.",
+          });
+        } else {
+          throw new Error("Image generation did not return any images.");
+        }
       } catch (error) {
         console.error("Error generating image:", error);
+        let description = "Could not generate the images. Please try again.";
+        if (error instanceof Error) {
+            description = error.message || description;
+        }
         toast({
           title: "Generation Failed",
-          description: "Could not generate the image. Please try again.",
+          description: description,
           variant: "destructive",
         });
       }
@@ -129,17 +155,18 @@ export function CalligraphyGenerator() {
   };
 
   const handleDownloadImage = () => {
-    if (!generatedImageUri) return;
+    if (!selectedImageUri || !selectedRatio) return;
     const link = document.createElement("a");
-    link.href = generatedImageUri;
+    link.href = selectedImageUri;
     const safePhrase = phrase.replace(/[^\u4e00-\u9fa5\w\s]/g, '').substring(0, 20) || "calligraphy";
-    link.download = `brushverse_${safePhrase}.png`;
+    const safeRatio = selectedRatio.replace(':', '-');
+    link.download = `brushverse_${safePhrase}_${safeRatio}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     toast({
       title: "Image Downloaded",
-      description: "The image has been saved to your device.",
+      description: `The ${selectedRatio} image has been saved to your device.`,
     });
   };
 
@@ -272,7 +299,6 @@ export function CalligraphyGenerator() {
               </Select>
             </div>
 
-
             <div className="space-y-4">
               <Label className="text-lg flex items-center"><Sparkles className="mr-2 h-5 w-5 text-accent" />Sample Phrases (Traditional)</Label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -306,7 +332,7 @@ export function CalligraphyGenerator() {
               ) : (
                 <PenTool className="mr-2 h-6 w-6" />
               )}
-              Generate Image
+              Generate Images
             </Button>
           </CardFooter>
         </Card>
@@ -314,23 +340,23 @@ export function CalligraphyGenerator() {
         <Card className="shadow-xl sticky top-8">
           <CardHeader>
             <CardTitle className="font-headline text-3xl">Preview</CardTitle>
-            <CardDescription>Your generated calligraphy will appear here.</CardDescription>
+            <CardDescription>Your generated calligraphy will appear here. Select a ratio below.</CardDescription>
           </CardHeader>
           <CardContent 
              className={cn(
                 "min-h-[300px] max-h-[75vh] overflow-y-auto rounded-md p-4 flex flex-col",
-                (!generatedImageUri && !isPending) && "items-center justify-center" 
+                (!selectedImageUri && !isPending) && "items-center justify-center" 
               )}
             style={{ backgroundColor: backgroundImageTheme === backgroundThemeOptions[0].value ? backgroundColor : 'transparent' }}
           >
             {isPending && (
               <div className="flex flex-col items-center justify-center text-center h-full">
                 <Loader2 className="h-16 w-16 text-primary animate-spin mb-4" />
-                <p className="text-lg text-muted-foreground">Generating your masterpiece...</p>
+                <p className="text-lg text-muted-foreground">Generating your masterpieces...</p>
                 <p className="text-sm text-muted-foreground">Using theme: {backgroundImageTheme !== backgroundThemeOptions[0].value ? backgroundImageTheme : 'Solid Color'}</p>
               </div>
             )}
-            {!isPending && generatedImageUri && (
+            {!isPending && selectedImageUri && (
               <div className="w-full space-y-4">
                 <div
                   className={cn(
@@ -340,8 +366,8 @@ export function CalligraphyGenerator() {
                   style={{ backgroundColor: backgroundImageTheme === backgroundThemeOptions[0].value ? backgroundColor : 'transparent' }}
                 >
                    <img
-                    src={generatedImageUri}
-                    alt="Generated Calligraphy"
+                    src={selectedImageUri}
+                    alt={`Generated Calligraphy (${selectedRatio})`}
                     style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto' }}
                     className="rounded-md"
                     data-ai-hint="calligraphy art"
@@ -369,24 +395,38 @@ export function CalligraphyGenerator() {
                 )}
               </div>
             )}
-            {!isPending && !generatedImageUri && (
+            {!isPending && !selectedImageUri && (
               <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-full">
                 <Palette className="h-16 w-16 mx-auto mb-4 opacity-50" />
                 <p className="text-lg">Your artwork will be shown here.</p>
-                <p className="text-sm">Adjust settings and click "Generate Image".</p>
+                <p className="text-sm">Adjust settings and click "Generate Images".</p>
               </div>
             )}
           </CardContent>
-          {generatedImageUri && !isPending && (
-            <CardFooter>
+          {generatedImages && generatedImages.length > 0 && !isPending && (
+            <CardFooter className="flex-col items-stretch space-y-3 pt-4">
+               <div className="flex justify-center space-x-2">
+                {generatedImages.map((imgInfo) => (
+                  <Button
+                    key={imgInfo.ratio}
+                    variant={selectedRatio === imgInfo.ratio ? "default" : "outline"}
+                    onClick={() => setSelectedRatio(imgInfo.ratio)}
+                    className="flex-1"
+                    aria-label={`Select ${imgInfo.label} ratio (${imgInfo.ratio})`}
+                  >
+                    {imgInfo.label} ({imgInfo.ratio})
+                  </Button>
+                ))}
+              </div>
               <Button
                 onClick={handleDownloadImage}
                 variant="outline"
                 className="w-full text-lg py-6 border-primary text-primary hover:bg-primary/10"
                 aria-label="Download Calligraphy Image"
+                disabled={!selectedImageUri}
               >
                 <Download className="mr-2 h-6 w-6" />
-                Download Image
+                Download Selected Image
               </Button>
             </CardFooter>
           )}
@@ -398,4 +438,3 @@ export function CalligraphyGenerator() {
     </div>
   );
 }
-

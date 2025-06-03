@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview AI flow for generating Chinese calligraphy with enhanced spacing.
+ * @fileOverview AI flow for generating Chinese calligraphy with enhanced spacing and multiple aspect ratios.
  *
  * - aiEnhancedSpacing - A function that handles the calligraphy generation process.
  * - AIEnhancedSpacingInput - The input type for the aiEnhancedSpacing function.
@@ -35,12 +35,11 @@ const AIEnhancedSpacingInputSchema = z.object({
 export type AIEnhancedSpacingInput = z.infer<typeof AIEnhancedSpacingInputSchema>;
 
 const AIEnhancedSpacingOutputSchema = z.object({
-  spacedImageUri: z
-    .string()
-    .describe(
-      `A data URI of the generated image with AI-enhanced character spacing, layout, optional border, and optional background theme, including MIME type and Base64 encoding (data:<mimetype>;base64,<encoded_data>).
-      The image visualizes the Chinese phrase with optimized spacing for visual balance and composition, ensuring character integrity.`
-    ),
+  generatedImages: z.array(z.object({
+    ratio: z.string().describe("The aspect ratio of the image, e.g., '1:1', '3:4'."),
+    imageUri: z.string().describe("A data URI of the generated image for this ratio, including MIME type and Base64 encoding (data:<mimetype>;base64,<encoded_data>). The image visualizes the Chinese phrase with optimized spacing, layout, optional border, and optional background theme, ensuring character integrity."),
+    label: z.string().describe("A user-friendly label for the ratio, e.g., 'Square', 'Portrait'.")
+  })).describe("An array of generated images, each with a specific aspect ratio, its URI, and a label."),
   explanationEn: z
     .string()
     .optional()
@@ -85,26 +84,36 @@ const aiEnhancedSpacingFlow = ai.defineFlow(
     outputSchema: AIEnhancedSpacingOutputSchema,
   },
   async (input: AIEnhancedSpacingInput): Promise<AIEnhancedSpacingOutput> => {
-    let imageGenPrompt = `Generate a Chinese calligraphy image of the phrase "${input.chinesePhrase}".
+    const targetRatios = [
+      { id: "1:1", label: "Square" , instruction: "1:1 (a perfect square image)"},
+      { id: "3:4", label: "Portrait", instruction: "3:4 (a portrait image, taller than it is wide)" },
+      { id: "16:9", label: "Landscape", instruction: "16:9 (a landscape image, wider than it is tall)" },
+    ];
+    
+    const generatedImagesOutput: Array<{ ratio: string; imageUri: string; label: string }> = [];
+
+    for (const ratioInfo of targetRatios) {
+      let imageGenPrompt = `Generate a Chinese calligraphy image of the phrase "${input.chinesePhrase}".
 Font style: ${input.fontFamily}.
 Character size: approximately ${input.fontSize}px.
-Brush thickness: ${input.brushSize}px.`;
+Brush thickness: ${input.brushSize}px.
+The final image should be rendered with an aspect ratio of ${ratioInfo.instruction}.`;
 
-    if (input.backgroundImageTheme && input.backgroundImageTheme.toLowerCase() !== 'none' && input.backgroundImageTheme.toLowerCase() !== 'solid color (current)') {
-      imageGenPrompt += `
+      if (input.backgroundImageTheme && input.backgroundImageTheme.toLowerCase() !== 'none' && input.backgroundImageTheme.toLowerCase() !== 'solid color (current)') {
+        imageGenPrompt += `
 The calligraphy should be rendered on a surface that has a background depicting: "${input.backgroundImageTheme}".
 The calligraphy characters must be clear and legible against this themed background. The visual theme ("${input.backgroundImageTheme}") must be the dominant background feature.`;
-    } else {
-      imageGenPrompt += `
+      } else {
+        imageGenPrompt += `
 The calligraphy should be rendered on a surface with a solid background color of: ${input.backgroundColor}.`;
-    }
-    
-    imageGenPrompt += `
+      }
+      
+      imageGenPrompt += `
 After rendering the calligraphy on its background, the entire composition (calligraphy on its themed or solid background) should be framed with the following border style: ${input.borderStyle || "none"}.
 If the border style is "none", "no border", or not specified, do not add any visible border.
 Otherwise, apply the described border around the entire artwork.`;
 
-    imageGenPrompt += `
+      imageGenPrompt += `
 
 **CRITICAL VERIFICATION STEP: CHARACTER ACCURACY AND ORDER.**
 Before any artistic rendering or spacing, you MUST verify that the calligraphy you are about to generate contains **EXACTLY** the characters from the input phrase: "${input.chinesePhrase}", in the **EXACT SAME ORDER**.
@@ -116,7 +125,7 @@ This character-by-character and order accuracy is paramount and non-negotiable. 
 
 After confirming character and order accuracy, proceed to visual rendering.`;
 
-    imageGenPrompt += `
+      imageGenPrompt += `
 
 **CRITICAL INSTRUCTION: CHARACTER AND STROKE INTEGRITY ARE THE ABSOLUTE, UNCOMPROMISING TOP PRIORITY. NO EXCEPTIONS.**
 Your **singular, undisputed, number one priority** is to ensure:
@@ -133,18 +142,30 @@ The fundamental shape, form, and strokes of each individual character MUST NOT b
 
 An image with incorrect or missing characters, incorrect character order, or incorrect/missing strokes is **completely unacceptable and considered a failure**, regardless of its spacing or overall composition. The final image must display each character distinctly, correctly, and accurately, with all characters matching the input phrase in content and order, and all strokes present and correctly formed. Re-evaluate and re-verify every character, especially complex ones, before finalizing the image.`;
 
-    const imageResponse = await ai.generate({
-      model: 'googleai/gemini-2.0-flash-exp',
-      prompt: imageGenPrompt,
-      config: {
-        responseModalities: ['TEXT', 'IMAGE'],
-      },
-    });
+      try {
+        const imageResponse = await ai.generate({
+          model: 'googleai/gemini-2.0-flash-exp',
+          prompt: imageGenPrompt,
+          config: {
+            responseModalities: ['TEXT', 'IMAGE'],
+          },
+        });
 
-    const spacedImageUri = imageResponse.media?.url;
-    if (!spacedImageUri) {
-      console.error('Image generation response:', imageResponse);
-      throw new Error('Image generation failed or did not return a valid media URL. The response from the model might not contain image data.');
+        const imageUri = imageResponse.media?.url;
+        if (imageUri) {
+          generatedImagesOutput.push({ ratio: ratioInfo.id, imageUri, label: ratioInfo.label });
+        } else {
+          console.warn(`Image generation failed or did not return a valid media URL for ratio ${ratioInfo.id}. Response:`, imageResponse);
+          // Optionally, push a placeholder or skip, or throw error for this ratio
+        }
+      } catch (error) {
+          console.error(`Error generating image for ratio ${ratioInfo.id}:`, error);
+          // Optionally, decide if one failure should stop all, or continue
+      }
+    } // End of for loop
+
+    if (generatedImagesOutput.length === 0 && targetRatios.length > 0) {
+        throw new Error('All image generation attempts failed for all aspect ratios.');
     }
     
     const explanationResult = await explanationPrompt({
@@ -161,11 +182,9 @@ An image with incorrect or missing characters, incorrect character order, or inc
     };
 
     return {
-      spacedImageUri,
+      generatedImages: generatedImagesOutput,
       explanationEn,
       explanationZh,
     };
   }
 );
-
-    
