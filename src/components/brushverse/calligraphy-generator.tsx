@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Crop, Download, Image as ImageIcon, Languages, List, Loader2, Palette, PenTool, RefreshCcw, Sparkles, Square, TextCursorInput, WholeWord } from "lucide-react";
 import { useState, useTransition, type KeyboardEvent, useEffect, useCallback, useRef } from "react";
-import ReactCrop, { type Crop as CropType, type PixelCrop } from 'react-image-crop';
+import ReactCrop, { type Crop as CropType } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 
 const fontOptions = [
@@ -124,7 +124,7 @@ const shuffleArray = (array: SamplePhrase[]) => {
 
 async function getCroppedImg(
   imageSrc: string,
-  crop: CropType // CropType can be PercentCrop or PixelCrop
+  crop: CropType
 ): Promise<string | null> {
   const image = new Image();
   image.crossOrigin = 'anonymous';
@@ -142,7 +142,7 @@ async function getCroppedImg(
   });
 
   if (crop.width === 0 || crop.height === 0) {
-    return 'data:,'; // Return empty data URI for zero-dimension crop
+    return 'data:,'; 
   }
 
   const canvas = document.createElement('canvas');
@@ -160,14 +160,13 @@ async function getCroppedImg(
     pixelY = (crop.y / 100) * image.naturalHeight;
     pixelWidth = (crop.width / 100) * image.naturalWidth;
     pixelHeight = (crop.height / 100) * image.naturalHeight;
-  } else { // Assuming 'px' or unitless implies pixels
+  } else { 
     pixelX = crop.x;
     pixelY = crop.y;
     pixelWidth = crop.width;
     pixelHeight = crop.height;
   }
   
-  // Ensure calculated pixel dimensions are not zero before setting canvas size
   if (pixelWidth === 0 || pixelHeight === 0) {
     return 'data:,';
   }
@@ -215,8 +214,8 @@ export function CalligraphyGenerator() {
   const { toast } = useToast();
 
   const imgRef = useRef<HTMLImageElement>(null);
-  const [crop, setCrop] = useState<CropType>(); // For visual cropper
-  const [completedCrop, setCompletedCrop] = useState<CropType>(); // For actual cropping logic, can be % or px
+  const [crop, setCrop] = useState<CropType>();
+  const [completedCrop, setCompletedCrop] = useState<CropType>();
   const [showCropper, setShowCropper] = useState(false);
   const [croppedImageUrl, setCroppedImageUrl] = useState<string | null>(null);
 
@@ -325,7 +324,7 @@ export function CalligraphyGenerator() {
     link.href = uriToDownload;
     const safePhrase = phrase.replace(/[^\u4e00-\u9fa5\w\s]/g, '').substring(0, 20) || "calligraphy";
     const safeRatio = selectedRatio.replace(':', '-');
-    link.download = `brushverse_${safePhrase}_${safeRatio}${isCropped ? '_cropped' : ''}.png`;
+    link.download = `cybrushverse_${safePhrase}_${safeRatio}${isCropped ? '_cropped' : ''}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -389,7 +388,7 @@ export function CalligraphyGenerator() {
   return (
     <div className="container mx-auto px-4 py-8">
       <header className="text-center mb-12">
-        <h1 className="text-5xl font-headline font-bold text-primary">BrushVerse</h1>
+        <h1 className="text-5xl font-headline font-bold text-primary">CyBrushVerse</h1>
         <p className="text-xl text-muted-foreground mt-2">Craft Your Chinese Calligraphy with AI</p>
       </header>
 
@@ -710,7 +709,7 @@ export function CalligraphyGenerator() {
         </Card>
       </div>
       <footer className="text-center mt-16 py-6 border-t border-border">
-        <p className="text-muted-foreground">&copy; {new Date().getFullYear()} BrushVerse. All rights reserved.</p>
+        <p className="text-muted-foreground">&copy; {new Date().getFullYear()} CyBrushVerse. All rights reserved.</p>
       </footer>
     </div>
   );

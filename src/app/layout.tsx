@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'BrushVerse - Craft Your Chinese Calligraphy',
+  title: 'CyBrushVerse - Craft Your Chinese Calligraphy',
   description: 'Generate beautiful Chinese calligraphy images with AI-enhanced spacing.',
 };
 
