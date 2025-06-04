@@ -91,10 +91,13 @@ const aiEnhancedSpacingFlow = ai.defineFlow(
     ];
     
     const generatedImagesOutput: Array<{ ratio: string; imageUri: string; label: string }> = [];
+    
+    // Updated prompt section for font size and brush thickness
     let imageGenPromptBase = `Generate a Chinese calligraphy image of the phrase "${input.chinesePhrase}".
-Font style: ${input.fontFamily}.
-Character size: approximately ${input.fontSize}px.
-Brush thickness: ${input.brushSize}px.`;
+The Chinese characters must be rendered in the font style: ${input.fontFamily}.
+The visual size of the characters is a key attribute and must closely correspond to ${input.fontSize}px.
+The thickness of the brush strokes is also a key attribute and must be rendered to be equivalent to ${input.brushSize}px.
+Strive to make the character size and brush thickness clearly reflect these specified values.`;
 
     if (input.backgroundImageTheme && input.backgroundImageTheme.toLowerCase() !== 'none' && input.backgroundImageTheme.toLowerCase() !== 'solid color (current)') {
         imageGenPromptBase += `
